@@ -6,17 +6,27 @@ The project uses modern Python and MuJoCo. It does not reuse the authors' implem
 
 ## Status
 
-MuJoCo 3.14.0 has been verified on macOS. The current learning model introduces
-MJCF bodies, geoms, a hinge joint, and a motor actuator.
+MuJoCo 3.14.0 has been verified on macOS. The current model is a modular crawler
+generated through MuJoCo's `MjSpec` API. It has a functional head marker,
+mirrored two-segment legs, and passive hinges connecting neighboring torsos.
 
-Open the model in MuJoCo's native viewer:
+Preview the passive spine of a two-module crawler:
 
 ```bash
-python -m mujoco.viewer --mjcf="$PWD/models/test.xml"
+mjpython -m nervenet.cli.view_crawler --modules 2 --motion spine
 ```
 
-Run the model with the introductory PD controller and passive viewer:
+Preview the coordinated leg motion:
 
 ```bash
-mjpython inspect_model.py
+mjpython -m nervenet.cli.view_crawler --modules 2 --motion gait
+```
+
+Change `--modules` to construct another morphology from the same builder. These
+commands are kinematic previews; they do not run physics yet.
+
+Run the model tests:
+
+```bash
+.venv/bin/python -m unittest discover -s tests -v
 ```
