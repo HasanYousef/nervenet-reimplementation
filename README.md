@@ -14,3 +14,9 @@ Open the model in MuJoCo's native viewer:
 ```bash
 python -m mujoco.viewer --mjcf="$PWD/models/test.xml"
 ```
+
+Run the model with the introductory PD controller and passive viewer:
+
+```bash
+mjpython inspect_model.py
+```
