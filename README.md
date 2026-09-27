@@ -6,4 +6,11 @@ The project uses modern Python and MuJoCo. It does not reuse the authors' implem
 
 ## Status
 
-Initial environment setup. MuJoCo 3.14.0 has been verified on macOS.
+MuJoCo 3.14.0 has been verified on macOS. The current learning model introduces
+MJCF bodies, geoms, a hinge joint, and a motor actuator.
+
+Open the model in MuJoCo's native viewer:
+
+```bash
+python -m mujoco.viewer --mjcf="$PWD/models/test.xml"
+```
