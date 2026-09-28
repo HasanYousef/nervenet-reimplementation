@@ -9,7 +9,8 @@ The project uses modern Python and MuJoCo. It does not reuse the authors' implem
 MuJoCo 3.14.0 has been verified on macOS. The current model is a modular crawler
 generated through MuJoCo's `MjSpec` API. It has a functional head marker,
 mirrored actuated legs, passive hinges connecting neighboring torsos, and a
-free-moving root. A Gymnasium environment defines the action and observation
+free-moving root. Its initial height is derived from the leg geometry so the
+feet begin just above the ground. A Gymnasium environment defines the action and observation
 spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
 forward-velocity reward, reproducible reset randomization, and a configurable
 episode time limit.
@@ -48,19 +49,25 @@ Run one reproducible random-policy episode as an environment sanity check:
 .venv/bin/python -m nervenet.cli.rollout_random --modules 2 --seed 0
 ```
 
-Train and save the two-module flat PPO baseline:
+Train and save the three-module flat PPO baseline:
 
 ```bash
 .venv/bin/python -m nervenet.cli.train_flat \
+  --modules 3 \
   --timesteps 100000 \
-  --seed 0 \
-  --output artifacts/flat_policy
+  --seed 0
 ```
 
 Compare the frozen flat policy with seeded random actions:
 
 ```bash
 .venv/bin/python -m nervenet.cli.compare_policies \
-  --model artifacts/flat_policy.zip \
+  --modules 3 \
   --episodes 5
+```
+
+Play the trained policy in the passive MuJoCo viewer:
+
+```bash
+mjpython -m nervenet.cli.view_policy --modules 3
 ```

@@ -45,7 +45,12 @@ observation spaces, deterministic reset, action validation, physics stepping at
 a 50 Hz control rate, a forward-velocity reward, reproducible joint-state reset
 noise, and a configurable episode time limit.
 
-The experiment tooling can train a conventional flat PPO policy, run seeded
+The initial torso height is derived from the lower-leg geometry and a small
+ground clearance. Episodes therefore begin at contact height instead of with a
+large fall that a policy could exploit for forward displacement.
+
+The experiment tooling defaults to a three-module crawler and can train a
+conventional flat PPO policy, run seeded
 episodes through a policy-independent evaluator, and compare the frozen policy
 with a reproducible random-action baseline. Generated models live under the
 ignored `artifacts/` directory.

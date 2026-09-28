@@ -5,7 +5,7 @@ import time
 import mujoco
 import mujoco.viewer
 
-from nervenet.models.crawler import TORSO_SPACING, build_crawler_model
+from nervenet.models.crawler import TORSO_HEIGHT, TORSO_SPACING, build_crawler_model
 
 CYCLE_SECONDS = 4.0
 
@@ -110,7 +110,7 @@ def main() -> None:
         viewer.cam.lookat[:] = [
             -TORSO_SPACING * (args.modules - 1) / 2.0,
             0.0,
-            0.78,
+            TORSO_HEIGHT,
         ]
         viewer.cam.distance = max(3.8, 1.2 * args.modules)
         viewer.cam.azimuth = 100.0

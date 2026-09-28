@@ -3,7 +3,7 @@ import unittest
 
 import mujoco
 
-from nervenet.models.crawler import build_crawler_model
+from nervenet.models.crawler import GROUND_CLEARANCE, build_crawler_model
 
 
 def names(model: mujoco.MjModel, object_type: mujoco.mjtObj, count: int) -> set[str]:
@@ -68,6 +68,33 @@ class CrawlerModelTest(unittest.TestCase):
 
         self.assertLess(data.xpos[second_torso_id, 0], data.xpos[head_id, 0])
         self.assertGreater(data.site_xpos[collection_site_id, 0], data.xpos[head_id, 0])
+
+    def test_three_module_feet_start_just_above_ground(self) -> None:
+        model = build_crawler_model(3)
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+
+        self.assertEqual(model.njnt, 15)
+        self.assertEqual(model.nu, 12)
+        self.assertAlmostEqual(model.body_mass.sum(), 9.0)
+
+        for module_index in range(1, 4):
+            for side in ("left", "right"):
+                geom_id = mujoco.mj_name2id(
+                    model,
+                    mujoco.mjtObj.mjOBJ_GEOM,
+                    f"module_{module_index}_{side}_lower_leg_geom",
+                )
+                rotation = data.geom_xmat[geom_id].reshape(3, 3)
+                radius = model.geom_size[geom_id, 0]
+                half_length = model.geom_size[geom_id, 1]
+                lowest_point = (
+                    data.geom_xpos[geom_id, 2]
+                    - abs(rotation[2, 2]) * half_length
+                    - radius
+                )
+
+                self.assertAlmostEqual(lowest_point, GROUND_CLEARANCE)
 
     def test_module_count_must_be_positive(self) -> None:
         with self.assertRaisesRegex(ValueError, "at least 1"):

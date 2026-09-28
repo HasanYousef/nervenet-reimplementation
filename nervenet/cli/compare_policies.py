@@ -29,21 +29,25 @@ def main() -> None:
     parser.add_argument(
         "--model",
         type=Path,
-        default=Path("artifacts/flat_policy.zip"),
+        default=None,
     )
+    parser.add_argument("--modules", type=int, default=3)
     parser.add_argument("--episodes", type=int, default=5)
     args = parser.parse_args()
 
     if args.episodes <= 0:
         parser.error("--episodes must be positive")
 
-    model = PPO.load(args.model, device="cpu")
+    model_path = args.model or Path(
+        f"artifacts/flat_policy_{args.modules}_modules.zip"
+    )
+    model = PPO.load(model_path, device="cpu")
 
     random_results = []
     flat_results = []
 
     for seed in range(args.episodes):
-        random_env = CrawlerEnv(module_count=2)
+        random_env = CrawlerEnv(module_count=args.modules)
         random_env.action_space.seed(seed)
 
         random_results.append(
@@ -54,7 +58,7 @@ def main() -> None:
             )
         )
 
-        flat_env = CrawlerEnv(module_count=2)
+        flat_env = CrawlerEnv(module_count=args.modules)
 
         flat_results.append(
             run_episode(

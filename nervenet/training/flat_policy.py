@@ -6,11 +6,12 @@ from nervenet.envs import CrawlerEnv
 def train_flat_policy(
     total_timesteps: int,
     seed: int,
+    module_count: int = 3,
 ) -> PPO:
     if total_timesteps <= 0:
         raise ValueError("total_timesteps must be positive")
 
-    env = CrawlerEnv(module_count=2)
+    env = CrawlerEnv(module_count=module_count)
 
     model = PPO(
         policy="MlpPolicy",
