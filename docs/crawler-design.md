@@ -49,6 +49,10 @@ The initial torso height is derived from the lower-leg geometry and a small
 ground clearance. Episodes therefore begin at contact height instead of with a
 large fall that a policy could exploit for forward displacement.
 
+Each normalized motor command in `[-1, 1]` maps through an actuator gear of
+`20`, providing enough torque authority for the 9 kg three-module crawler while
+keeping the policy-facing action space independent of the physical scale.
+
 The experiment tooling defaults to a three-module crawler and can train a
 conventional flat PPO policy, run seeded
 episodes through a policy-independent evaluator, and compare the frozen policy

@@ -11,15 +11,13 @@ LOWER_LEG_ENDPOINT = [0.28, 0.0, -0.20]
 LEG_RADIUS = 0.04
 GROUND_CLEARANCE = 0.01
 TORSO_HEIGHT = (
-    LEG_RADIUS
-    - UPPER_LEG_ENDPOINT[2]
-    - LOWER_LEG_ENDPOINT[2]
-    + GROUND_CLEARANCE
+    LEG_RADIUS - UPPER_LEG_ENDPOINT[2] - LOWER_LEG_ENDPOINT[2] + GROUND_CLEARANCE
 )
 
 TORSO_MASS = 2.0
 UPPER_LEG_MASS = 0.3
 LOWER_LEG_MASS = 0.2
+ACTUATOR_GEAR = 20.0
 
 
 def _add_motor(spec: mujoco.MjSpec, joint_name: str) -> None:
@@ -29,7 +27,7 @@ def _add_motor(spec: mujoco.MjSpec, joint_name: str) -> None:
         target=joint_name,
         ctrllimited=True,
         ctrlrange=[-1.0, 1.0],
-        gear=[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        gear=[ACTUATOR_GEAR, 0.0, 0.0, 0.0, 0.0, 0.0],
     )
 
 

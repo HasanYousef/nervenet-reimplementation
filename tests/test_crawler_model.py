@@ -3,7 +3,11 @@ import unittest
 
 import mujoco
 
-from nervenet.models.crawler import GROUND_CLEARANCE, build_crawler_model
+from nervenet.models.crawler import (
+    ACTUATOR_GEAR,
+    GROUND_CLEARANCE,
+    build_crawler_model,
+)
 
 
 def names(model: mujoco.MjModel, object_type: mujoco.mjtObj, count: int) -> set[str]:
@@ -77,6 +81,7 @@ class CrawlerModelTest(unittest.TestCase):
         self.assertEqual(model.njnt, 15)
         self.assertEqual(model.nu, 12)
         self.assertAlmostEqual(model.body_mass.sum(), 9.0)
+        self.assertTrue((model.actuator_gear[:, 0] == ACTUATOR_GEAR).all())
 
         for module_index in range(1, 4):
             for side in ("left", "right"):
