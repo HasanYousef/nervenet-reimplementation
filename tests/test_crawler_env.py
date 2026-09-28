@@ -21,6 +21,10 @@ class CrawlerEnvTest(unittest.TestCase):
         self.assertEqual(CrawlerEnv(module_count=1).action_space.shape, (4,))
         self.assertEqual(CrawlerEnv(module_count=3).action_space.shape, (12,))
 
+    def test_episode_duration_must_be_positive(self) -> None:
+        with self.assertRaisesRegex(ValueError, "max_episode_seconds must be positive"):
+            CrawlerEnv(max_episode_seconds=0.0)
+
     def test_reset_restores_initial_state(self) -> None:
         env = CrawlerEnv(module_count=2)
         env.data.time = 1.0
@@ -43,10 +47,11 @@ class CrawlerEnvTest(unittest.TestCase):
 
         self.assertAlmostEqual(env.data.time, env.control_timestep)
         self.assertTrue(env.observation_space.contains(observation))
-        self.assertEqual(reward, 0.0)
+        self.assertAlmostEqual(reward, 0.0)
         self.assertFalse(terminated)
         self.assertFalse(truncated)
-        self.assertEqual(info, {})
+        self.assertEqual(info["x_velocity"], reward)
+        self.assertAlmostEqual(info["x_position"], env.data.qpos[0])
 
     def test_step_rejects_action_with_wrong_shape(self) -> None:
         env = CrawlerEnv(module_count=2)
@@ -54,6 +59,18 @@ class CrawlerEnvTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "Invalid action"):
             env.step(np.zeros(7, dtype=np.float64))
+
+    def test_episode_is_truncated_at_time_limit(self) -> None:
+        env = CrawlerEnv(module_count=1, max_episode_seconds=0.04)
+        env.reset()
+
+        action = np.zeros(env.action_space.shape, dtype=np.float64)
+
+        _, _, _, first_truncated, _ = env.step(action)
+        _, _, _, second_truncated, _ = env.step(action)
+
+        self.assertFalse(first_truncated)
+        self.assertTrue(second_truncated)
 
 
 if __name__ == "__main__":

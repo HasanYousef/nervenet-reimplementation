@@ -7,12 +7,23 @@ from nervenet.models import build_crawler_model
 
 
 class CrawlerEnv(gym.Env):
-    def __init__(self, module_count: int = 2) -> None:
+
+    def __init__(
+        self,
+        module_count: int = 2,
+        max_episode_seconds: float = 10.0,
+    ) -> None:
         super().__init__()
 
+        if max_episode_seconds <= 0:
+            raise ValueError("max_episode_seconds must be positive")
+
         self.frame_skip = 10
+        self.episode_steps = 0
         self.model = build_crawler_model(module_count)
         self.data = mujoco.MjData(self.model)
+
+        self.max_episode_steps = round(max_episode_seconds / self.control_timestep)
 
         self.action_space = spaces.Box(
             low=-1.0,
@@ -51,6 +62,7 @@ class CrawlerEnv(gym.Env):
         super().reset(seed=seed)
 
         mujoco.mj_resetData(self.model, self.data)
+        self.episode_steps = 0
         mujoco.mj_forward(self.model, self.data)
 
         observation = self._get_observation()
@@ -62,6 +74,8 @@ class CrawlerEnv(gym.Env):
         self,
         action: np.ndarray,
     ) -> tuple[np.ndarray, float, bool, bool, dict]:
+        x_before = float(self.data.qpos[0])
+
         action = np.asarray(action, dtype=np.float64)
 
         if not self.action_space.contains(action):
@@ -72,11 +86,18 @@ class CrawlerEnv(gym.Env):
         for _ in range(self.frame_skip):
             mujoco.mj_step(self.model, self.data)
 
+        self.episode_steps += 1
+        x_after = float(self.data.qpos[0])
+        forward_velocity = (x_after - x_before) / self.control_timestep
+
         observation = self._get_observation()
 
-        reward = 0.0
+        reward = forward_velocity
         terminated = not np.isfinite(observation).all()
-        truncated = False
-        info = {}
+        truncated = self.episode_steps >= self.max_episode_steps
+        info = {
+            "x_position": x_after,
+            "x_velocity": forward_velocity,
+        }
 
         return observation, reward, terminated, truncated, info

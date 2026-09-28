@@ -9,9 +9,9 @@ The project uses modern Python and MuJoCo. It does not reuse the authors' implem
 MuJoCo 3.14.0 has been verified on macOS. The current model is a modular crawler
 generated through MuJoCo's `MjSpec` API. It has a functional head marker,
 mirrored actuated legs, passive hinges connecting neighboring torsos, and a
-free-moving root. A Gymnasium environment skeleton defines the action and
-observation spaces, deterministic reset, and physics stepping. Reward and
-episode time-limit logic are not implemented yet.
+free-moving root. A Gymnasium environment defines the action and observation
+spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
+forward-velocity reward, and a configurable episode time limit.
 
 Preview the passive spine of a two-module crawler:
 
