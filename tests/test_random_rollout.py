@@ -1,26 +1,28 @@
 import unittest
 
-from nervenet.cli.rollout_random import run_random_episode
+from nervenet.evaluation import run_episode
 from nervenet.envs import CrawlerEnv
 
 
 class RandomRolloutTest(unittest.TestCase):
     def test_seeded_rollout_reaches_time_limit_reproducibly(self) -> None:
-        first = run_random_episode(
-            CrawlerEnv(module_count=1, max_episode_seconds=0.04),
-            seed=7,
-        )
-        second = run_random_episode(
-            CrawlerEnv(module_count=1, max_episode_seconds=0.04),
-            seed=7,
-        )
+        def run_seeded_episode():
+            env = CrawlerEnv(module_count=1, max_episode_seconds=0.04)
+            env.action_space.seed(7)
+
+            return run_episode(
+                env=env,
+                action_selector=lambda observation: env.action_space.sample(),
+                seed=7,
+            )
+
+        first = run_seeded_episode()
+        second = run_seeded_episode()
 
         self.assertEqual(first, second)
-
-        steps, _, terminated, truncated, _ = first
-        self.assertEqual(steps, 2)
-        self.assertFalse(terminated)
-        self.assertTrue(truncated)
+        self.assertEqual(first.steps, 2)
+        self.assertFalse(first.terminated)
+        self.assertTrue(first.truncated)
 
 
 if __name__ == "__main__":

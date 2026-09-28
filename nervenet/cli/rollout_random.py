@@ -1,29 +1,7 @@
 import argparse
 
 from nervenet.envs import CrawlerEnv
-
-
-def run_random_episode(
-    env: CrawlerEnv,
-    seed: int,
-) -> tuple[int, float, bool, bool, dict]:
-    env.reset(seed=seed)
-    env.action_space.seed(seed)
-
-    total_reward = 0.0
-    steps = 0
-    terminated = False
-    truncated = False
-    info = {}
-
-    while not (terminated or truncated):
-        action = env.action_space.sample()
-        _, reward, terminated, truncated, info = env.step(action)
-
-        total_reward += reward
-        steps += 1
-
-    return steps, total_reward, terminated, truncated, info
+from nervenet.evaluation import run_episode
 
 
 def main() -> None:
@@ -35,19 +13,22 @@ def main() -> None:
     args = parser.parse_args()
 
     env = CrawlerEnv(module_count=args.modules)
-    steps, total_reward, terminated, truncated, info = run_random_episode(
-        env,
+    env.action_space.seed(args.seed)
+
+    result = run_episode(
+        env=env,
+        action_selector=lambda _observation: env.action_space.sample(),
         seed=args.seed,
     )
 
-    end_reason = "unstable state" if terminated else "time limit"
-    duration = steps * env.control_timestep
+    end_reason = "unstable state" if result.terminated else "time limit"
+    duration = result.steps * env.control_timestep
 
-    print(f"Seed: {args.seed}")
-    print(f"Steps: {steps}")
+    print(f"Seed: {result.seed}")
+    print(f"Steps: {result.steps}")
     print(f"Duration: {duration:.2f} s")
-    print(f"Distance: {info['x_position']:.3f} m")
-    print(f"Total reward: {total_reward:.3f}")
+    print(f"Distance: {result.distance:.3f} m")
+    print(f"Total reward: {result.total_reward:.3f}")
     print(f"Ended by: {end_reason}")
 
 

@@ -47,3 +47,20 @@ Run one reproducible random-policy episode as an environment sanity check:
 ```bash
 .venv/bin/python -m nervenet.cli.rollout_random --modules 2 --seed 0
 ```
+
+Train and save the two-module flat PPO baseline:
+
+```bash
+.venv/bin/python -m nervenet.cli.train_flat \
+  --timesteps 100000 \
+  --seed 0 \
+  --output artifacts/flat_policy
+```
+
+Compare the frozen flat policy with seeded random actions:
+
+```bash
+.venv/bin/python -m nervenet.cli.compare_policies \
+  --model artifacts/flat_policy.zip \
+  --episodes 5
+```
