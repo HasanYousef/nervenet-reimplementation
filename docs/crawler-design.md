@@ -48,5 +48,4 @@ noise, and a configurable episode time limit.
 ## Next steps
 
 1. Validate the environment with Gymnasium's checker.
-2. Add an end-to-end random-policy rollout diagnostic.
-3. Train a flat-policy baseline before implementing graph message passing.
+2. Train a flat-policy baseline before implementing graph message passing.

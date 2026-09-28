@@ -41,3 +41,9 @@ Run the model tests:
 ```bash
 .venv/bin/python -m unittest discover -s tests -v
 ```
+
+Run one reproducible random-policy episode as an environment sanity check:
+
+```bash
+.venv/bin/python -m nervenet.cli.rollout_random --modules 2 --seed 0
+```
