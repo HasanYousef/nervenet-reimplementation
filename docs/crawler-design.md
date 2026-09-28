@@ -59,6 +59,11 @@ episodes through a policy-independent evaluator, and compare the frozen policy
 with a reproducible random-action baseline. Generated models live under the
 ignored `artifacts/` directory.
 
+Evaluation also records lateral displacement, motor-command magnitude,
+saturation and change, and actuated joint speed. These diagnostics exposed a
+high-return policy that drifted sideways while rapidly switching near-maximum
+motor commands.
+
 ## Next steps
 
 1. Establish a meaningful flat-policy learning curve across multiple seeds.

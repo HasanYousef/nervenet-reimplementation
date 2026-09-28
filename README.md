@@ -66,6 +66,10 @@ Compare the frozen flat policy with seeded random actions:
   --episodes 5
 ```
 
+The comparison reports forward and lateral displacement, motor-command
+magnitude and saturation, command changes, and actuated joint speed so reward
+exploitation is visible rather than hidden behind a single return value.
+
 Play the trained policy in the passive MuJoCo viewer:
 
 ```bash

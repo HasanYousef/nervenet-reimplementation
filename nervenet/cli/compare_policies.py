@@ -13,12 +13,28 @@ def print_summary(
     results: list[EpisodeResult],
 ) -> None:
     mean_distance = fmean(result.distance for result in results)
+    mean_lateral_distance = fmean(result.lateral_distance for result in results)
     mean_reward = fmean(result.total_reward for result in results)
+    mean_abs_action = fmean(result.mean_abs_action for result in results)
+    mean_saturation = fmean(
+        result.action_saturation_fraction for result in results
+    )
+    mean_action_change = fmean(
+        result.mean_abs_action_change for result in results
+    )
+    mean_joint_velocity = fmean(
+        result.mean_abs_actuated_joint_velocity for result in results
+    )
     unstable_episodes = sum(result.terminated for result in results)
 
     print(name)
-    print(f"  Mean distance: {mean_distance:.3f} m")
+    print(f"  Mean forward distance: {mean_distance:.3f} m")
+    print(f"  Mean lateral distance: {mean_lateral_distance:.3f} m")
     print(f"  Mean total reward: {mean_reward:.3f}")
+    print(f"  Mean absolute action: {mean_abs_action:.3f}")
+    print(f"  Action saturation: {mean_saturation:.1%}")
+    print(f"  Mean absolute action change: {mean_action_change:.3f}")
+    print(f"  Mean actuated joint speed: {mean_joint_velocity:.3f} rad/s")
     print(f"  Unstable episodes: {unstable_episodes}/{len(results)}")
 
 

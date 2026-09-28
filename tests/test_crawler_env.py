@@ -60,6 +60,7 @@ class CrawlerEnvTest(unittest.TestCase):
         self.assertFalse(truncated)
         self.assertEqual(info["x_velocity"], reward)
         self.assertAlmostEqual(info["x_position"], env.data.qpos[0])
+        self.assertAlmostEqual(info["y_position"], env.data.qpos[1])
 
     def test_step_rejects_action_with_wrong_shape(self) -> None:
         env = CrawlerEnv(module_count=2)

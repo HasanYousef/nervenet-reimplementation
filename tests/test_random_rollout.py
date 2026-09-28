@@ -23,6 +23,10 @@ class RandomRolloutTest(unittest.TestCase):
         self.assertEqual(first.steps, 2)
         self.assertFalse(first.terminated)
         self.assertTrue(first.truncated)
+        self.assertGreaterEqual(first.mean_abs_action, 0.0)
+        self.assertLessEqual(first.mean_abs_action, 1.0)
+        self.assertGreaterEqual(first.action_saturation_fraction, 0.0)
+        self.assertLessEqual(first.action_saturation_fraction, 1.0)
 
 
 if __name__ == "__main__":

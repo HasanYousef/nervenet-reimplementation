@@ -118,6 +118,7 @@ class CrawlerEnv(gym.Env):
         truncated = self.episode_steps >= self.max_episode_steps
         info = {
             "x_position": x_after,
+            "y_position": float(self.data.qpos[1]),
             "x_velocity": forward_velocity,
         }
 
