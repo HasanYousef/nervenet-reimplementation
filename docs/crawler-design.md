@@ -40,13 +40,13 @@ Handwritten MJCF is not a source of truth for repeated bodies.
 ## Current boundary
 
 The model builder, kinematic previews, free-moving root, leg motors, and physics
-preview exist. A Gymnasium environment skeleton defines module-dependent action
-and observation spaces, but does not yet implement `reset()`, `step()`, reward,
-or episode termination.
+preview exist. The Gymnasium environment defines module-dependent action and
+observation spaces, deterministic reset, action validation, and physics
+stepping at a 50 Hz control rate. Reward and time-limit logic remain pending.
 
 ## Next steps
 
-1. Implement deterministic environment reset and observation retrieval.
-2. Implement action stepping, forward-progress reward, and a time limit.
-3. Validate the environment with Gymnasium's checker.
+1. Implement forward-progress reward and a time limit.
+2. Validate the environment with Gymnasium's checker.
+3. Add controlled reset randomization.
 4. Train a flat-policy baseline before implementing graph message passing.
