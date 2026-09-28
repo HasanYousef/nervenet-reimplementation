@@ -42,11 +42,11 @@ Handwritten MJCF is not a source of truth for repeated bodies.
 The model builder, kinematic previews, free-moving root, leg motors, and physics
 preview exist. The Gymnasium environment defines module-dependent action and
 observation spaces, deterministic reset, action validation, physics stepping at
-a 50 Hz control rate, a forward-velocity reward, and a configurable episode
-time limit.
+a 50 Hz control rate, a forward-velocity reward, reproducible joint-state reset
+noise, and a configurable episode time limit.
 
 ## Next steps
 
 1. Validate the environment with Gymnasium's checker.
-2. Add controlled reset randomization.
+2. Add an end-to-end random-policy rollout diagnostic.
 3. Train a flat-policy baseline before implementing graph message passing.

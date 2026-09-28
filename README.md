@@ -11,7 +11,8 @@ generated through MuJoCo's `MjSpec` API. It has a functional head marker,
 mirrored actuated legs, passive hinges connecting neighboring torsos, and a
 free-moving root. A Gymnasium environment defines the action and observation
 spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
-forward-velocity reward, and a configurable episode time limit.
+forward-velocity reward, reproducible reset randomization, and a configurable
+episode time limit.
 
 Preview the passive spine of a two-module crawler:
 

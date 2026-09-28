@@ -26,7 +26,11 @@ class CrawlerEnvTest(unittest.TestCase):
             CrawlerEnv(max_episode_seconds=0.0)
 
     def test_reset_restores_initial_state(self) -> None:
-        env = CrawlerEnv(module_count=2)
+        env = CrawlerEnv(
+            module_count=2,
+            reset_position_noise=0.0,
+            reset_velocity_noise=0.0,
+        )
         env.data.time = 1.0
         env.data.qvel[:] = 1.0
 
@@ -38,7 +42,11 @@ class CrawlerEnvTest(unittest.TestCase):
         self.assertEqual(info, {})
 
     def test_step_advances_one_control_timestep(self) -> None:
-        env = CrawlerEnv(module_count=2)
+        env = CrawlerEnv(
+            module_count=2,
+            reset_position_noise=0.0,
+            reset_velocity_noise=0.0,
+        )
         env.reset()
 
         observation, reward, terminated, truncated, info = env.step(
@@ -71,6 +79,23 @@ class CrawlerEnvTest(unittest.TestCase):
 
         self.assertFalse(first_truncated)
         self.assertTrue(second_truncated)
+
+    def test_reset_noise_is_reproducible(self) -> None:
+        env = CrawlerEnv(module_count=2)
+
+        first_observation, _ = env.reset(seed=7)
+        second_observation, _ = env.reset(seed=7)
+        different_observation, _ = env.reset(seed=8)
+
+        np.testing.assert_array_equal(first_observation, second_observation)
+        self.assertFalse(np.array_equal(first_observation, different_observation))
+
+    def test_reset_noise_must_be_non_negative(self) -> None:
+        with self.assertRaisesRegex(ValueError, "reset_position_noise"):
+            CrawlerEnv(reset_position_noise=-0.01)
+
+        with self.assertRaisesRegex(ValueError, "reset_velocity_noise"):
+            CrawlerEnv(reset_velocity_noise=-0.01)
 
 
 if __name__ == "__main__":
