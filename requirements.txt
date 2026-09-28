@@ -1,1 +1,2 @@
 mujoco==3.14.0
+gymnasium==1.3.0

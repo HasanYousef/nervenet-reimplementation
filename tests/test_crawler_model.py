@@ -1,3 +1,4 @@
+import math
 import unittest
 
 import mujoco
@@ -19,18 +20,36 @@ class CrawlerModelTest(unittest.TestCase):
         joint_names = names(model, mujoco.mjtObj.mjOBJ_JOINT, model.njnt)
         site_names = names(model, mujoco.mjtObj.mjOBJ_SITE, model.nsite)
 
-        self.assertEqual(model.njnt, 4)
+        self.assertEqual(model.njnt, 5)
+        self.assertEqual(model.nu, 4)
+        self.assertIn("root", joint_names)
         self.assertNotIn("spine_1_to_2", joint_names)
         self.assertIn("module_1_left_hip", joint_names)
         self.assertIn("module_1_right_knee", joint_names)
         self.assertIn("head_collection_site", site_names)
+
+        hip_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_JOINT,
+            "module_1_left_hip",
+        )
+        self.assertAlmostEqual(
+            model.jnt_range[hip_id, 0],
+            math.radians(-40.0),
+        )
+        self.assertAlmostEqual(
+            model.jnt_range[hip_id, 1],
+            math.radians(40.0),
+        )
 
     def test_two_modules_add_four_leg_joints_and_one_spine(self) -> None:
         model = build_crawler_model(2)
         joint_names = names(model, mujoco.mjtObj.mjOBJ_JOINT, model.njnt)
         geom_names = names(model, mujoco.mjtObj.mjOBJ_GEOM, model.ngeom)
 
-        self.assertEqual(model.njnt, 9)
+        self.assertEqual(model.njnt, 10)
+        self.assertEqual(model.nu, 8)
+        self.assertAlmostEqual(model.body_mass.sum(), 6.0)
         self.assertIn("spine_1_to_2", joint_names)
         self.assertIn("module_2_left_hip", joint_names)
         self.assertIn("module_2_right_knee", joint_names)
@@ -39,9 +58,7 @@ class CrawlerModelTest(unittest.TestCase):
 
         data = mujoco.MjData(model)
         mujoco.mj_forward(model, data)
-        head_id = mujoco.mj_name2id(
-            model, mujoco.mjtObj.mjOBJ_BODY, "module_1_torso"
-        )
+        head_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "module_1_torso")
         second_torso_id = mujoco.mj_name2id(
             model, mujoco.mjtObj.mjOBJ_BODY, "module_2_torso"
         )

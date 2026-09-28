@@ -7,7 +7,6 @@ import mujoco.viewer
 
 from nervenet.models.crawler import TORSO_SPACING, build_crawler_model
 
-
 CYCLE_SECONDS = 4.0
 
 
@@ -23,9 +22,21 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--motion",
-        choices=("static", "spine", "gait"),
+        choices=("static", "spine", "gait", "physics"),
         default="spine",
         help="Kinematic preview to display (default: spine)",
+    )
+    parser.add_argument(
+        "--actuator",
+        type=str,
+        default=None,
+        help="Name of an actuator to command during physics mode",
+    )
+    parser.add_argument(
+        "--control",
+        type=float,
+        default=1.0,
+        help="Control value applied to the selected actuator",
     )
     return parser.parse_args()
 
@@ -81,14 +92,28 @@ def main() -> None:
     model = build_crawler_model(args.modules)
     data = mujoco.MjData(model)
 
+    actuator_id = None
+
+    if args.actuator is not None:
+        actuator_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_ACTUATOR,
+            args.actuator,
+        )
+
+        if actuator_id < 0:
+            raise ValueError(f"Actuator not found: {args.actuator}")
+
+        data.ctrl[actuator_id] = args.control
+
     with mujoco.viewer.launch_passive(model, data) as viewer:
         viewer.cam.lookat[:] = [
             -TORSO_SPACING * (args.modules - 1) / 2.0,
             0.0,
             0.78,
         ]
-        viewer.cam.distance = max(1.8, 0.65 * args.modules)
-        viewer.cam.azimuth = 135.0
+        viewer.cam.distance = max(3.8, 1.2 * args.modules)
+        viewer.cam.azimuth = 100.0
         viewer.cam.elevation = -25.0
 
         started_at = time.monotonic()
@@ -100,9 +125,14 @@ def main() -> None:
             elif args.motion == "gait":
                 preview_gait(model, data, args.modules, phase)
 
-            mujoco.mj_forward(model, data)
+            if args.motion == "physics":
+                mujoco.mj_step(model, data)
+                time.sleep(model.opt.timestep)
+            else:
+                mujoco.mj_forward(model, data)
+                time.sleep(1.0 / 60.0)
+
             viewer.sync()
-            time.sleep(1.0 / 60.0)
 
 
 if __name__ == "__main__":

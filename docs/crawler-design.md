@@ -15,9 +15,11 @@ unseen body size without changing its learned parameters.
 - Each module has a sphere torso and two-segment left/right legs.
 - Each leg has a Z-axis hip hinge and a local Y-axis knee hinge.
 - Hip limits are `-40..40` degrees; knee limits are `-35..50` degrees.
+- Each torso has an explicit mass of `2.0 kg`; upper and lower leg segments are
+  `0.3 kg` and `0.2 kg` respectively, for `3.0 kg` per module.
 - Neighboring torsos connect through passive Z-axis spine hinges limited to
   `-20..20` degrees.
-- Each module contributes four future actuators and policy actions.
+- Each module contributes four torque actuators and policy actions.
 - Primitive geoms are used instead of decorative meshes.
 
 ```text
@@ -37,12 +39,14 @@ Handwritten MJCF is not a source of truth for repeated bodies.
 
 ## Current boundary
 
-The model builder and kinematic previews exist. The root body remains fixed,
-the leg joints do not yet have actuators, and the previews do not run physics.
+The model builder, kinematic previews, free-moving root, leg motors, and physics
+preview exist. A Gymnasium environment skeleton defines module-dependent action
+and observation spaces, but does not yet implement `reset()`, `step()`, reward,
+or episode termination.
 
 ## Next steps
 
-1. Make the crawler dynamic and validate its initial ground contact.
-2. Add leg actuators while keeping spine joints passive.
-3. Define observations, actions, resets, reward, and evaluation.
+1. Implement deterministic environment reset and observation retrieval.
+2. Implement action stepping, forward-progress reward, and a time limit.
+3. Validate the environment with Gymnasium's checker.
 4. Train a flat-policy baseline before implementing graph message passing.
