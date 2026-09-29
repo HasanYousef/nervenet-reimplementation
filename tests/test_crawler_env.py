@@ -98,6 +98,29 @@ class CrawlerEnvTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "reset_velocity_noise"):
             CrawlerEnv(reset_velocity_noise=-0.01)
 
+    def test_reward_includes_mean_squared_control_cost(self) -> None:
+        env = CrawlerEnv(
+            module_count=1,
+            reset_position_noise=0.0,
+            reset_velocity_noise=0.0,
+            control_cost_weight=0.05,
+        )
+        env.reset()
+
+        action = np.ones(env.action_space.shape, dtype=np.float64)
+        _, reward, _, _, info = env.step(action)
+
+        self.assertAlmostEqual(info["control_cost"], 0.05)
+        self.assertAlmostEqual(info["forward_reward"], info["x_velocity"])
+        self.assertAlmostEqual(
+            reward,
+            info["forward_reward"] - info["control_cost"],
+        )
+
+    def test_control_cost_weight_must_be_non_negative(self) -> None:
+        with self.assertRaisesRegex(ValueError, "control_cost_weight"):
+            CrawlerEnv(control_cost_weight=-0.01)
+
 
 if __name__ == "__main__":
     unittest.main()

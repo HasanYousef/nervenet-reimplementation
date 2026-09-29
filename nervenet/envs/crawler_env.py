@@ -14,6 +14,7 @@ class CrawlerEnv(gym.Env):
         max_episode_seconds: float = 10.0,
         reset_position_noise: float = 0.01,
         reset_velocity_noise: float = 0.01,
+        control_cost_weight: float = 0.05,
     ) -> None:
         super().__init__()
 
@@ -26,6 +27,9 @@ class CrawlerEnv(gym.Env):
         if reset_velocity_noise < 0:
             raise ValueError("reset_velocity_noise must be non-negative")
 
+        if control_cost_weight < 0:
+            raise ValueError("control_cost_weight must be non-negative")
+
         self.frame_skip = 10
         self.episode_steps = 0
         self.model = build_crawler_model(module_count)
@@ -33,6 +37,7 @@ class CrawlerEnv(gym.Env):
 
         self.reset_position_noise = reset_position_noise
         self.reset_velocity_noise = reset_velocity_noise
+        self.control_cost_weight = control_cost_weight
 
         self.max_episode_steps = round(max_episode_seconds / self.control_timestep)
 
@@ -111,15 +116,19 @@ class CrawlerEnv(gym.Env):
         x_after = float(self.data.qpos[0])
         forward_velocity = (x_after - x_before) / self.control_timestep
 
+        control_cost = self.control_cost_weight * float(np.mean(np.square(action)))
+
         observation = self._get_observation()
 
-        reward = forward_velocity
+        reward = forward_velocity - control_cost
         terminated = not np.isfinite(observation).all()
         truncated = self.episode_steps >= self.max_episode_steps
         info = {
             "x_position": x_after,
             "y_position": float(self.data.qpos[1]),
             "x_velocity": forward_velocity,
+            "forward_reward": forward_velocity,
+            "control_cost": control_cost,
         }
 
         return observation, reward, terminated, truncated, info

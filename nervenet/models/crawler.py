@@ -17,7 +17,7 @@ TORSO_HEIGHT = (
 TORSO_MASS = 2.0
 UPPER_LEG_MASS = 0.3
 LOWER_LEG_MASS = 0.2
-ACTUATOR_GEAR = 20.0
+ACTUATOR_GEAR = 12.0
 
 
 def _add_motor(spec: mujoco.MjSpec, joint_name: str) -> None:

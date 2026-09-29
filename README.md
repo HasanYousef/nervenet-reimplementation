@@ -12,8 +12,8 @@ mirrored actuated legs, passive hinges connecting neighboring torsos, and a
 free-moving root. Its initial height is derived from the leg geometry so the
 feet begin just above the ground. A Gymnasium environment defines the action and observation
 spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
-forward-velocity reward, reproducible reset randomization, and a configurable
-episode time limit.
+forward-velocity reward with a normalized motor-effort cost, reproducible reset
+randomization, and a configurable episode time limit.
 
 Preview the passive spine of a two-module crawler:
 

@@ -50,8 +50,13 @@ ground clearance. Episodes therefore begin at contact height instead of with a
 large fall that a policy could exploit for forward displacement.
 
 Each normalized motor command in `[-1, 1]` maps through an actuator gear of
-`20`, providing enough torque authority for the 9 kg three-module crawler while
-keeping the policy-facing action space independent of the physical scale.
+`12`, a physically plausible initial maximum for the 9 kg three-module crawler.
+The policy-facing action space remains independent of this physical scale.
+
+The reward subtracts `0.05 * mean(action^2)` from forward velocity. Averaging
+keeps the effort cost comparable across morphologies with different actuator
+counts; it is an optimization proxy for motor effort, not a literal energy
+model.
 
 The experiment tooling defaults to a three-module crawler and can train a
 conventional flat PPO policy, run seeded
