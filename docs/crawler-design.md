@@ -73,9 +73,24 @@ experiment must use the same value for both commands when comparing returns.
 The tracked policy viewer uses a non-colliding one-meter grid over a dark
 40-by-40-meter floor; stronger lines mark five-meter intervals.
 
+## Morphology graph
+
+The first NerveNet-specific layer is extracted from the compiled MuJoCo model
+rather than maintained as a second, manually synchronized description.
+
+- Every non-world MuJoCo body is one graph node.
+- Every parent-child body connection is one graph edge.
+- Joints belong to their child body node.
+- Joint actuators belong to the node containing their target joint.
+- Passive bodies, including torso nodes connected by spine joints, remain in
+  the graph even though they produce no action.
+
+For the three-module crawler this produces 15 nodes, 14 physical edges, and 12
+locally owned actions. Observation assignment and neural message passing are
+separate layers and are intentionally not part of the topology extractor.
+
 ## Next steps
 
-1. Define the morphology graph schema and local feature ownership.
-2. Extract and test graphs for multiple module counts.
-3. Implement graph message passing while keeping PPO and the environment fixed.
-4. Compare flat and graph policies across multiple training seeds.
+1. Define and test local observation ownership.
+2. Implement graph message passing while keeping PPO and the environment fixed.
+3. Compare flat and graph policies across multiple training seeds.

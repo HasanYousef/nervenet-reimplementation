@@ -15,6 +15,11 @@ spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
 forward-velocity reward with a normalized motor-effort cost, reproducible reset
 randomization, and a configurable episode time limit.
 
+The first NerveNet-specific layer now derives a morphology graph directly from
+the compiled MuJoCo model. Nodes are movable bodies, edges are physical
+parent-child connections, and every actuator is assigned to the body containing
+its target joint.
+
 Preview the passive spine of a two-module crawler:
 
 ```bash
