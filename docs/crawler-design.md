@@ -73,9 +73,22 @@ experiment must use the same value for both commands when comparing returns.
 The tracked policy viewer uses a non-colliding one-meter grid over a dark
 40-by-40-meter floor; stronger lines mark five-meter intervals.
 
+## Body graph
+
+The compiled MuJoCo model is converted into a body-based graph for the
+structured policy.
+
+- Every robot body except the MuJoCo world becomes one node.
+- Parent body IDs define the graph hierarchy.
+- A joint belongs to the child body that it moves.
+- An actuator belongs to the body containing its target joint.
+- Passive bodies remain graph nodes even when they own no actuator.
+
+For one crawler module, the graph contains one torso and four leg-segment
+nodes. Every additional module adds one torso and four leg-segment nodes.
+
 ## Next steps
 
-1. Define the morphology graph schema and local feature ownership.
-2. Extract and test graphs for multiple module counts.
-3. Implement graph message passing while keeping PPO and the environment fixed.
-4. Compare flat and graph policies across multiple training seeds.
+1. Define and test local observation ownership for every body node.
+2. Implement graph message passing while keeping PPO and the environment fixed.
+3. Compare flat and graph policies across multiple training seeds.
