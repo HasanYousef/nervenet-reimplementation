@@ -14,6 +14,11 @@ def main() -> None:
         type=Path,
         default=None,
     )
+    parser.add_argument(
+        "--control-cost-weight",
+        type=float,
+        default=0.05,
+    )
     args = parser.parse_args()
     output = args.output or Path(f"artifacts/flat_policy_{args.modules}_modules")
 
@@ -21,6 +26,7 @@ def main() -> None:
         total_timesteps=args.timesteps,
         seed=args.seed,
         module_count=args.modules,
+        control_cost_weight=args.control_cost_weight,
     )
 
     output.parent.mkdir(parents=True, exist_ok=True)

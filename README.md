@@ -55,7 +55,8 @@ Train and save the three-module flat PPO baseline:
 .venv/bin/python -m nervenet.cli.train_flat \
   --modules 3 \
   --timesteps 100000 \
-  --seed 0
+  --seed 0 \
+  --control-cost-weight 0.05
 ```
 
 Compare the frozen flat policy with seeded random actions:
@@ -63,12 +64,15 @@ Compare the frozen flat policy with seeded random actions:
 ```bash
 .venv/bin/python -m nervenet.cli.compare_policies \
   --modules 3 \
-  --episodes 5
+  --episodes 5 \
+  --control-cost-weight 0.05
 ```
 
 The comparison reports forward and lateral displacement, motor-command
 magnitude and saturation, command changes, and actuated joint speed so reward
 exploitation is visible rather than hidden behind a single return value.
+Use the same `--control-cost-weight` for training and comparison when reporting
+returns from an experiment.
 
 Play the trained policy in the passive MuJoCo viewer:
 

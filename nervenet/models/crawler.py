@@ -19,6 +19,20 @@ UPPER_LEG_MASS = 0.3
 LOWER_LEG_MASS = 0.2
 ACTUATOR_GEAR = 12.0
 
+GROUND_HALF_SIZE = 20
+GRID_SPACING = 1
+GRID_LINE_HALF_WIDTH = 0.006
+GRID_LINE_HALF_HEIGHT = 0.001
+GROUND_RGBA = [0.16, 0.18, 0.21, 1.0]
+GRID_RGBA = [0.32, 0.35, 0.39, 1.0]
+MAJOR_GRID_RGBA = [0.50, 0.54, 0.59, 1.0]
+
+HEAD_TORSO_RGBA = [0.16, 0.38, 0.64, 1.0]
+TORSO_RGBA = [0.38, 0.42, 0.48, 1.0]
+UPPER_LEG_RGBA = [0.56, 0.59, 0.64, 1.0]
+LOWER_LEG_RGBA = [0.46, 0.49, 0.54, 1.0]
+COLLECTION_SITE_RGBA = [0.16, 0.70, 0.36, 0.75]
+
 
 def _add_motor(spec: mujoco.MjSpec, joint_name: str) -> None:
     spec.add_actuator(
@@ -61,6 +75,7 @@ def _add_leg(
         fromto=[0.0, 0.0, 0.0, *UPPER_LEG_ENDPOINT],
         size=[LEG_RADIUS, 0.0, 0.0],
         mass=UPPER_LEG_MASS,
+        rgba=UPPER_LEG_RGBA,
     )
 
     lower_leg = upper_leg.add_body(
@@ -83,6 +98,7 @@ def _add_leg(
         fromto=[0.0, 0.0, 0.0, *LOWER_LEG_ENDPOINT],
         size=[LEG_RADIUS, 0.0, 0.0],
         mass=LOWER_LEG_MASS,
+        rgba=LOWER_LEG_RGBA,
     )
 
 
@@ -98,7 +114,7 @@ def _add_module_geometry(
         type=mujoco.mjtGeom.mjGEOM_SPHERE,
         size=[TORSO_RADIUS, 0.0, 0.0],
         mass=TORSO_MASS,
-        rgba=[0.20, 0.45, 0.80, 1.0] if is_head else [0.35, 0.38, 0.43, 1.0],
+        rgba=HEAD_TORSO_RGBA if is_head else TORSO_RGBA,
     )
     if is_head:
         torso.add_site(
@@ -106,10 +122,55 @@ def _add_module_geometry(
             type=mujoco.mjtGeom.mjGEOM_SPHERE,
             pos=[TORSO_RADIUS + 0.03, 0.0, 0.0],
             size=[0.04, 0.0, 0.0],
-            rgba=[0.20, 0.85, 0.35, 0.65],
+            rgba=COLLECTION_SITE_RGBA,
         )
     _add_leg(spec, torso, module_index, "left")
     _add_leg(spec, torso, module_index, "right")
+
+
+def _grid_coordinate_name(coordinate: int) -> str:
+    if coordinate < 0:
+        return f"negative_{abs(coordinate)}"
+    if coordinate > 0:
+        return f"positive_{coordinate}"
+    return "zero"
+
+
+def _add_ground_grid(spec: mujoco.MjSpec) -> None:
+    for coordinate in range(
+        -GROUND_HALF_SIZE,
+        GROUND_HALF_SIZE + GRID_SPACING,
+        GRID_SPACING,
+    ):
+        coordinate_name = _grid_coordinate_name(coordinate)
+        color = MAJOR_GRID_RGBA if coordinate % 5 == 0 else GRID_RGBA
+
+        spec.worldbody.add_geom(
+            name=f"ground_grid_x_{coordinate_name}",
+            type=mujoco.mjtGeom.mjGEOM_BOX,
+            pos=[coordinate, 0.0, GRID_LINE_HALF_HEIGHT],
+            size=[
+                GRID_LINE_HALF_WIDTH,
+                GROUND_HALF_SIZE,
+                GRID_LINE_HALF_HEIGHT,
+            ],
+            rgba=color,
+            contype=0,
+            conaffinity=0,
+        )
+        spec.worldbody.add_geom(
+            name=f"ground_grid_y_{coordinate_name}",
+            type=mujoco.mjtGeom.mjGEOM_BOX,
+            pos=[0.0, coordinate, GRID_LINE_HALF_HEIGHT],
+            size=[
+                GROUND_HALF_SIZE,
+                GRID_LINE_HALF_WIDTH,
+                GRID_LINE_HALF_HEIGHT,
+            ],
+            rgba=color,
+            contype=0,
+            conaffinity=0,
+        )
 
 
 def build_crawler_spec(module_count: int) -> mujoco.MjSpec:
@@ -123,8 +184,10 @@ def build_crawler_spec(module_count: int) -> mujoco.MjSpec:
     spec.worldbody.add_geom(
         name="ground",
         type=mujoco.mjtGeom.mjGEOM_PLANE,
-        size=[2.0, 2.0, 0.1],
+        size=[GROUND_HALF_SIZE, GROUND_HALF_SIZE, 0.1],
+        rgba=GROUND_RGBA,
     )
+    _add_ground_grid(spec)
 
     torso = spec.worldbody.add_body(
         name="module_1_torso",

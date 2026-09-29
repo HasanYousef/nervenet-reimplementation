@@ -49,6 +49,11 @@ def main() -> None:
     )
     parser.add_argument("--modules", type=int, default=3)
     parser.add_argument("--episodes", type=int, default=5)
+    parser.add_argument(
+        "--control-cost-weight",
+        type=float,
+        default=0.05,
+    )
     args = parser.parse_args()
 
     if args.episodes <= 0:
@@ -63,7 +68,10 @@ def main() -> None:
     flat_results = []
 
     for seed in range(args.episodes):
-        random_env = CrawlerEnv(module_count=args.modules)
+        random_env = CrawlerEnv(
+            module_count=args.modules,
+            control_cost_weight=args.control_cost_weight,
+        )
         random_env.action_space.seed(seed)
 
         random_results.append(
@@ -74,7 +82,10 @@ def main() -> None:
             )
         )
 
-        flat_env = CrawlerEnv(module_count=args.modules)
+        flat_env = CrawlerEnv(
+            module_count=args.modules,
+            control_cost_weight=args.control_cost_weight,
+        )
 
         flat_results.append(
             run_episode(

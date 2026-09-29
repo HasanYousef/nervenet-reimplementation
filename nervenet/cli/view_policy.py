@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import time
 
+import mujoco
 import mujoco.viewer
 from stable_baselines3 import PPO
 
@@ -28,12 +29,19 @@ def main() -> None:
     observation, _ = env.reset(seed=args.seed)
 
     with mujoco.viewer.launch_passive(env.model, env.data) as viewer:
+        tracked_body = mujoco.mj_name2id(
+            env.model,
+            mujoco.mjtObj.mjOBJ_BODY,
+            "module_1_torso",
+        )
+        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+        viewer.cam.trackbodyid = tracked_body
         viewer.cam.lookat[:] = [
             -TORSO_SPACING * (args.modules - 1) / 2.0,
             0.0,
             TORSO_HEIGHT,
         ]
-        viewer.cam.distance = max(3.8, 1.2 * args.modules)
+        viewer.cam.distance = max(5.0, 1.5 * args.modules)
         viewer.cam.azimuth = 100.0
         viewer.cam.elevation = -25.0
 

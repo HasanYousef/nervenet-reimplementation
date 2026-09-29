@@ -6,6 +6,9 @@ import mujoco
 from nervenet.models.crawler import (
     ACTUATOR_GEAR,
     GROUND_CLEARANCE,
+    GROUND_HALF_SIZE,
+    LOWER_LEG_RGBA,
+    UPPER_LEG_RGBA,
     build_crawler_model,
 )
 
@@ -60,6 +63,22 @@ class CrawlerModelTest(unittest.TestCase):
         self.assertIn("module_1_torso_geom", geom_names)
         self.assertIn("module_2_torso_geom", geom_names)
 
+        ground_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_GEOM,
+            "ground",
+        )
+        self.assertEqual(model.geom_size[ground_id, 0], GROUND_HALF_SIZE)
+        self.assertEqual(model.geom_size[ground_id, 1], GROUND_HALF_SIZE)
+
+        grid_line_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_GEOM,
+            "ground_grid_x_positive_1",
+        )
+        self.assertEqual(model.geom_contype[grid_line_id], 0)
+        self.assertEqual(model.geom_conaffinity[grid_line_id], 0)
+
         data = mujoco.MjData(model)
         mujoco.mj_forward(model, data)
         head_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "module_1_torso")
@@ -82,6 +101,29 @@ class CrawlerModelTest(unittest.TestCase):
         self.assertEqual(model.nu, 12)
         self.assertAlmostEqual(model.body_mass.sum(), 9.0)
         self.assertTrue((model.actuator_gear[:, 0] == ACTUATOR_GEAR).all())
+
+        upper_leg_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_GEOM,
+            "module_1_left_upper_leg_geom",
+        )
+        lower_leg_id = mujoco.mj_name2id(
+            model,
+            mujoco.mjtObj.mjOBJ_GEOM,
+            "module_1_left_lower_leg_geom",
+        )
+        for actual, expected in zip(
+            model.geom_rgba[upper_leg_id],
+            UPPER_LEG_RGBA,
+            strict=True,
+        ):
+            self.assertAlmostEqual(actual, expected)
+        for actual, expected in zip(
+            model.geom_rgba[lower_leg_id],
+            LOWER_LEG_RGBA,
+            strict=True,
+        ):
+            self.assertAlmostEqual(actual, expected)
 
         for module_index in range(1, 4):
             for side in ("left", "right"):

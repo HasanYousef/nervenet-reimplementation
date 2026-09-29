@@ -59,18 +59,23 @@ counts; it is an optimization proxy for motor effort, not a literal energy
 model.
 
 The experiment tooling defaults to a three-module crawler and can train a
-conventional flat PPO policy, run seeded
-episodes through a policy-independent evaluator, and compare the frozen policy
-with a reproducible random-action baseline. Generated models live under the
-ignored `artifacts/` directory.
+conventional flat PPO policy, run seeded episodes through a policy-independent
+evaluator, and compare the frozen policy with a reproducible random-action
+baseline. Generated models live under the ignored `artifacts/` directory.
 
 Evaluation also records lateral displacement, motor-command magnitude,
 saturation and change, and actuated joint speed. These diagnostics exposed a
 high-return policy that drifted sideways while rapidly switching near-maximum
 motor commands.
 
+Training and comparison both expose the control-cost weight explicitly. An
+experiment must use the same value for both commands when comparing returns.
+The tracked policy viewer uses a non-colliding one-meter grid over a dark
+40-by-40-meter floor; stronger lines mark five-meter intervals.
+
 ## Next steps
 
-1. Establish a meaningful flat-policy learning curve across multiple seeds.
-2. Add deterministic playback for trained policies.
-3. Define the morphology graph before implementing graph message passing.
+1. Define the morphology graph schema and local feature ownership.
+2. Extract and test graphs for multiple module counts.
+3. Implement graph message passing while keeping PPO and the environment fixed.
+4. Compare flat and graph policies across multiple training seeds.

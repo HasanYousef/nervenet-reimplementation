@@ -7,11 +7,15 @@ def train_flat_policy(
     total_timesteps: int,
     seed: int,
     module_count: int = 3,
+    control_cost_weight: float = 0.05,
 ) -> PPO:
     if total_timesteps <= 0:
         raise ValueError("total_timesteps must be positive")
 
-    env = CrawlerEnv(module_count=module_count)
+    env = CrawlerEnv(
+        module_count=module_count,
+        control_cost_weight=control_cost_weight,
+    )
 
     model = PPO(
         policy="MlpPolicy",
