@@ -87,8 +87,24 @@ structured policy.
 For one crawler module, the graph contains one torso and four leg-segment
 nodes. Every additional module adds one torso and four leg-segment nodes.
 
+## Local observations
+
+Changing simulation state is kept separate from the static body graph. At each
+step, every body node receives the values owned by its joint:
+
+- The root torso receives height, quaternion rotation, three linear velocities,
+  and three angular velocities. Global X and Y position are excluded, leaving
+  11 values.
+- A hip, knee, or passive spine body receives its hinge angle and angular
+  velocity, leaving two values.
+
+Graph observations remain separated by node and preserve graph order. A
+three-module crawler has one 11-value root observation and fourteen 2-value
+hinge observations, containing the same 39 state values as the flat policy's
+observation in a different organization.
+
 ## Next steps
 
-1. Define and test local observation ownership for every body node.
+1. Encode differently sized local observations into fixed-size hidden states.
 2. Implement graph message passing while keeping PPO and the environment fixed.
 3. Compare flat and graph policies across multiple training seeds.

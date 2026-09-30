@@ -15,6 +15,11 @@ spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
 forward-velocity reward with a normalized motor-effort cost, reproducible reset
 randomization, and a configurable episode time limit.
 
+The structured-policy foundation now derives a body graph from the compiled
+MuJoCo model and reads current observations locally for each node. The root
+torso receives its orientation and motion state, while hip, knee, and passive
+spine bodies receive their own joint angle and angular velocity.
+
 Preview the passive spine of a two-module crawler:
 
 ```bash
