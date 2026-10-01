@@ -9,7 +9,10 @@ from nervenet.graphs import (
     get_hinge_observation,
     get_root_observation,
 )
-from nervenet.graphs.observations import get_body_observation
+from nervenet.graphs.observations import (
+    get_body_observation,
+    pad_graph_observations,
+)
 from nervenet.models import build_crawler_model
 
 
@@ -100,6 +103,33 @@ class GraphObservationTest(unittest.TestCase):
             all(observation.shape == (2,) for observation in observations[1:])
         )
         self.assertEqual(sum(observation.size for observation in observations), 39)
+
+    def test_padding_preserves_values_and_fills_unused_columns_with_zero(self) -> None:
+        observations = [
+            np.array([1.0, 2.0, 3.0]),
+            np.array([4.0]),
+        ]
+
+        padded = pad_graph_observations(observations)
+
+        np.testing.assert_array_equal(
+            padded,
+            [
+                [1.0, 2.0, 3.0],
+                [4.0, 0.0, 0.0],
+            ],
+        )
+
+    def test_two_module_observations_pad_to_ten_by_eleven(self) -> None:
+        model = build_crawler_model(2)
+        data = mujoco.MjData(model)
+        graph = build_body_graph(model)
+        observations = get_graph_observations(model, data, graph)
+
+        padded = pad_graph_observations(observations)
+
+        self.assertEqual(padded.shape, (10, 11))
+        np.testing.assert_array_equal(padded[1, 2:], np.zeros(9))
 
 
 if __name__ == "__main__":

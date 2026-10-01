@@ -76,3 +76,19 @@ def get_graph_observations(
     graph: BodyGraph,
 ) -> list[np.ndarray]:
     return [get_body_observation(model, data, node) for node in graph.nodes]
+
+
+def pad_graph_observations(
+    observations: list[np.ndarray],
+) -> np.ndarray:
+    width = max(observation.size for observation in observations)
+
+    padded = np.zeros(
+        (len(observations), width),
+        dtype=np.float64,
+    )
+
+    for node_index, observation in enumerate(observations):
+        padded[node_index, : observation.size] = observation
+
+    return padded

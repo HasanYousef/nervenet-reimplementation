@@ -7,6 +7,7 @@ from nervenet.graphs.observations import (
     get_graph_observations,
     get_hinge_observation,
     get_root_observation,
+    pad_graph_observations,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "get_graph_observations",
     "get_hinge_observation",
     "get_root_observation",
+    "pad_graph_observations",
 ]

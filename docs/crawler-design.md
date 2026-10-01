@@ -103,6 +103,11 @@ three-module crawler has one 11-value root observation and fourteen 2-value
 hinge observations, containing the same 39 state values as the flat policy's
 observation in a different organization.
 
+Before entering a neural network, shorter observations are padded with zeros to
+the root observation width. The resulting matrix has one row per graph node and
+11 columns. A two-module crawler therefore produces a `10 x 11` input matrix;
+padding changes the layout but does not add simulated state.
+
 ## Next steps
 
 1. Encode differently sized local observations into fixed-size hidden states.
