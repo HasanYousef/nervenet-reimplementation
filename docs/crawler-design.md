@@ -108,8 +108,20 @@ the root observation width. The resulting matrix has one row per graph node and
 11 columns. A two-module crawler therefore produces a `10 x 11` input matrix;
 padding changes the layout but does not add simulated state.
 
+## Shared input encoder
+
+The first learned policy component applies one shared PyTorch linear layer and
+`tanh` activation to every padded node row. With the current defaults, each
+11-value observation becomes a 64-value hidden state. The same 768 trainable
+parameters process every body node, so increasing the module count changes the
+number of rows but does not change the encoder's parameter count.
+
+The encoder does not exchange information between nodes or produce motor
+commands. It only creates the initial hidden representation used by later
+message-passing stages.
+
 ## Next steps
 
-1. Encode differently sized local observations into fixed-size hidden states.
+1. Derive directed message-passing connections from the body hierarchy.
 2. Implement graph message passing while keeping PPO and the environment fixed.
 3. Compare flat and graph policies across multiple training seeds.

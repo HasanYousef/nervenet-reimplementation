@@ -19,6 +19,8 @@ The structured-policy foundation now derives a body graph from the compiled
 MuJoCo model and reads current observations locally for each node. The root
 torso receives its orientation and motion state, while hip, knee, and passive
 spine bodies receive their own joint angle and angular velocity.
+One shared input encoder converts every padded local observation into a
+fixed-width hidden representation without depending on the number of nodes.
 
 Preview the passive spine of a two-module crawler:
 
