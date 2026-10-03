@@ -87,6 +87,12 @@ structured policy.
 For one crawler module, the graph contains one torso and four leg-segment
 nodes. Every additional module adds one torso and four leg-segment nodes.
 
+Each parent-child body connection is also converted into two directed message
+routes: parent to child and child to parent. Routes use graph-node indexes, so
+they address the corresponding rows in the policy's hidden-state matrix rather
+than MuJoCo body IDs. This only defines where information may travel; message
+aggregation and node-state updates remain separate policy components.
+
 ## Local observations
 
 Changing simulation state is kept separate from the static body graph. At each
@@ -122,6 +128,6 @@ message-passing stages.
 
 ## Next steps
 
-1. Derive directed message-passing connections from the body hierarchy.
-2. Implement graph message passing while keeping PPO and the environment fixed.
+1. Aggregate neighboring hidden states along the directed message routes.
+2. Implement graph node-state updates while keeping PPO and the environment fixed.
 3. Compare flat and graph policies across multiple training seeds.

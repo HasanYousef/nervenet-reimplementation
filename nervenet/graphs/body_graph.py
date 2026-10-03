@@ -51,3 +51,24 @@ def build_body_graph(model: mujoco.MjModel) -> BodyGraph:
         )
 
     return BodyGraph(nodes=tuple(nodes))
+
+
+def get_message_routes(
+    graph: BodyGraph,
+) -> list[tuple[int, int]]:
+    node_index_by_body_id = {
+        node.body_id: node_index for node_index, node in enumerate(graph.nodes)
+    }
+
+    routes = []
+
+    for child_index, node in enumerate(graph.nodes):
+        if node.parent_body_id is None:
+            continue
+
+        parent_index = node_index_by_body_id[node.parent_body_id]
+
+        routes.append((parent_index, child_index))
+        routes.append((child_index, parent_index))
+
+    return routes

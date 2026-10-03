@@ -1,6 +1,6 @@
 import unittest
 
-from nervenet.graphs import build_body_graph
+from nervenet.graphs import build_body_graph, get_message_routes
 from nervenet.models import build_crawler_model
 
 
@@ -46,6 +46,25 @@ class BodyGraphTest(unittest.TestCase):
         self.assertEqual(
             sum(len(node.actuator_ids) for node in three_modules.nodes),
             12,
+        )
+
+    def test_one_module_message_routes_follow_body_hierarchy(self) -> None:
+        graph = build_body_graph(build_crawler_model(1))
+
+        routes = get_message_routes(graph)
+
+        self.assertEqual(
+            routes,
+            [
+                (0, 1),
+                (1, 0),
+                (1, 2),
+                (2, 1),
+                (0, 3),
+                (3, 0),
+                (3, 4),
+                (4, 3),
+            ],
         )
 
 
