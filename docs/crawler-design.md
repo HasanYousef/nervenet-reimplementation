@@ -126,8 +126,22 @@ The encoder does not exchange information between nodes or produce motor
 commands. It only creates the initial hidden representation used by later
 message-passing stages.
 
+## Message passing
+
+One message-passing round averages the hidden states sent to each node along
+the graph's directed routes. Nodes with no incoming route receive a zero
+message. A shared GRU cell then combines each node's aggregated neighbor
+message with its current 64-value hidden state. The output preserves the
+`node_count x 64` shape, and gradients flow through both aggregation and the
+state update.
+
+Aggregation contains no learned parameters. The GRU parameters are shared by
+every node, so the same message-passing layer handles crawler graphs with
+different module counts.
+
 ## Next steps
 
-1. Aggregate neighboring hidden states along the directed message routes.
-2. Implement graph node-state updates while keeping PPO and the environment fixed.
-3. Compare flat and graph policies across multiple training seeds.
+1. Repeat the shared message-passing round so information can travel beyond immediate neighbors.
+2. Decode node hidden states into actuator commands.
+3. Integrate the graph policy with PPO while keeping the environment fixed.
+4. Compare flat and graph policies across multiple training seeds.
