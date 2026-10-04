@@ -21,6 +21,10 @@ torso receives its orientation and motion state, while hip, knee, and passive
 spine bodies receive their own joint angle and angular velocity.
 One shared input encoder converts every padded local observation into a
 fixed-width hidden representation without depending on the number of nodes.
+The graph actor then performs recurrent neighbor message passing with a shared
+GRU and decodes motor-owning node states into action means in MuJoCo actuator
+order. The same actor instance supports crawler morphologies with different
+module and actuator counts. PPO integration remains the next milestone.
 
 Preview the passive spine of a two-module crawler:
 

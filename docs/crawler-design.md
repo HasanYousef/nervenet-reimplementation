@@ -152,8 +152,16 @@ passive torso and spine nodes. One shared linear decoder maps every selected
 64-value node state to a scalar action mean. It does not squash or sample the
 action; Gaussian sampling and action-space handling belong to PPO integration.
 
+## Graph actor
+
+The graph actor composes the shared input encoder, recurrent graph processor,
+and shared actuator decoder into one differentiable network. It accepts padded
+node observations plus the static routes and actuator-node mapping, and returns
+one action mean per MuJoCo actuator. The same actor instance has been verified
+on one- and three-module crawlers without changing its parameters.
+
 ## Next steps
 
-1. Compose encoding, graph processing, and actuator decoding into one network.
-2. Integrate the graph policy with PPO while keeping the environment fixed.
+1. Integrate the graph actor with PPO while keeping the environment fixed.
+2. Add the value-function path needed for PPO training.
 3. Compare flat and graph policies across multiple training seeds.
