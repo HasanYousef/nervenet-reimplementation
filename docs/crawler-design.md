@@ -144,8 +144,16 @@ number of propagation steps. Each round moves information across one more
 physical connection without adding another set of trainable parameters. The
 initial implementation uses two rounds by default.
 
+## Actuator output
+
+The body graph records which node owns each MuJoCo actuator. A deterministic
+mapping selects motor-owning hidden-state rows in actuator-ID order, skipping
+passive torso and spine nodes. One shared linear decoder maps every selected
+64-value node state to a scalar action mean. It does not squash or sample the
+action; Gaussian sampling and action-space handling belong to PPO integration.
+
 ## Next steps
 
-1. Decode node hidden states into actuator commands.
+1. Compose encoding, graph processing, and actuator decoding into one network.
 2. Integrate the graph policy with PPO while keeping the environment fixed.
 3. Compare flat and graph policies across multiple training seeds.

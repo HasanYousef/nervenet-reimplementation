@@ -1,6 +1,10 @@
 import unittest
 
-from nervenet.graphs import build_body_graph, get_message_routes
+from nervenet.graphs import (
+    build_body_graph,
+    get_actuator_node_indices,
+    get_message_routes,
+)
 from nervenet.models import build_crawler_model
 
 
@@ -65,6 +69,19 @@ class BodyGraphTest(unittest.TestCase):
                 (3, 4),
                 (4, 3),
             ],
+        )
+
+    def test_actuator_nodes_follow_mujoco_actuator_order(self) -> None:
+        one_module = build_body_graph(build_crawler_model(1))
+        two_modules = build_body_graph(build_crawler_model(2))
+
+        self.assertEqual(
+            get_actuator_node_indices(one_module),
+            (1, 2, 3, 4),
+        )
+        self.assertEqual(
+            get_actuator_node_indices(two_modules),
+            (1, 2, 3, 4, 6, 7, 8, 9),
         )
 
 

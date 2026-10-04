@@ -72,3 +72,17 @@ def get_message_routes(
         routes.append((child_index, parent_index))
 
     return routes
+
+
+def get_actuator_node_indices(
+    graph: BodyGraph,
+) -> tuple[int, ...]:
+    actuator_nodes = []
+
+    for node_index, node in enumerate(graph.nodes):
+        for actuator_id in node.actuator_ids:
+            actuator_nodes.append((actuator_id, node_index))
+
+    actuator_nodes.sort()
+
+    return tuple(node_index for actuator_id, node_index in actuator_nodes)
