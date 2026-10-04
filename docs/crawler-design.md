@@ -139,9 +139,13 @@ Aggregation contains no learned parameters. The GRU parameters are shared by
 every node, so the same message-passing layer handles crawler graphs with
 different module counts.
 
+A graph processor recurrently applies that same layer for a configurable
+number of propagation steps. Each round moves information across one more
+physical connection without adding another set of trainable parameters. The
+initial implementation uses two rounds by default.
+
 ## Next steps
 
-1. Repeat the shared message-passing round so information can travel beyond immediate neighbors.
-2. Decode node hidden states into actuator commands.
-3. Integrate the graph policy with PPO while keeping the environment fixed.
-4. Compare flat and graph policies across multiple training seeds.
+1. Decode node hidden states into actuator commands.
+2. Integrate the graph policy with PPO while keeping the environment fixed.
+3. Compare flat and graph policies across multiple training seeds.
