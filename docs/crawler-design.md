@@ -165,8 +165,14 @@ process many collected simulation snapshots together as
 `batch_size x node_count x feature_count` tensors while keeping message
 aggregation isolated within each snapshot.
 
+The base crawler environment continues to return its original flat observation
+for baseline compatibility. A separate Gymnasium observation wrapper derives
+the static body graph and replaces each returned flat vector with a padded
+`node_count x 11` matrix read from the same MuJoCo state. Physics, actions,
+rewards, termination, and reset behavior remain owned by the base environment.
+
 ## Next steps
 
-1. Integrate the graph actor with PPO while keeping the environment fixed.
-2. Add the value-function path needed for PPO training.
+1. Integrate the graph actor and graph-observation wrapper with PPO.
+2. Add the flat value-function path needed for PPO training.
 3. Compare flat and graph policies across multiple training seeds.

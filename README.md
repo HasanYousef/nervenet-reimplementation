@@ -24,7 +24,10 @@ fixed-width hidden representation without depending on the number of nodes.
 The graph actor then performs recurrent neighbor message passing with a shared
 GRU and decodes motor-owning node states into action means in MuJoCo actuator
 order. The same actor instance supports crawler morphologies with different
-module and actuator counts. PPO integration remains the next milestone.
+module and actuator counts. A Gymnasium observation wrapper exposes the same
+environment state as padded per-node matrices for graph-policy training while
+leaving the flat PPO baseline environment unchanged. PPO integration remains
+the next milestone.
 
 Preview the passive spine of a two-module crawler:
 
