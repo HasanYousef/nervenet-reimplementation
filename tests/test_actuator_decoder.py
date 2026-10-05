@@ -46,6 +46,42 @@ class ActuatorDecoderTest(unittest.TestCase):
         self.assertEqual(four_actions.shape, (4,))
         self.assertEqual(eight_actions.shape, (8,))
 
+    def test_batched_states_are_decoded_independently(self) -> None:
+        decoder = ActuatorDecoder(hidden_size=2)
+
+        with torch.no_grad():
+            decoder.linear.weight.copy_(torch.tensor([[1.0, 0.0]]))
+            decoder.linear.bias.zero_()
+
+        hidden_states = torch.tensor(
+            [
+                [
+                    [10.0, 1.0],
+                    [20.0, 2.0],
+                    [30.0, 3.0],
+                ],
+                [
+                    [100.0, 1.0],
+                    [200.0, 2.0],
+                    [300.0, 3.0],
+                ],
+            ]
+        )
+
+        result = decoder(
+            hidden_states,
+            actuator_node_indices=(2, 0),
+        )
+
+        expected = torch.tensor(
+            [
+                [30.0, 10.0],
+                [300.0, 100.0],
+            ]
+        )
+
+        torch.testing.assert_close(result, expected)
+
 
 if __name__ == "__main__":
     unittest.main()

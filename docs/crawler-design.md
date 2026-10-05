@@ -160,6 +160,11 @@ node observations plus the static routes and actuator-node mapping, and returns
 one action mean per MuJoCo actuator. The same actor instance has been verified
 on one- and three-module crawlers without changing its parameters.
 
+The actor also preserves arbitrary leading batch dimensions. PPO can therefore
+process many collected simulation snapshots together as
+`batch_size x node_count x feature_count` tensors while keeping message
+aggregation isolated within each snapshot.
+
 ## Next steps
 
 1. Integrate the graph actor with PPO while keeping the environment fixed.

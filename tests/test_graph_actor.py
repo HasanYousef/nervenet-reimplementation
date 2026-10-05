@@ -49,6 +49,29 @@ class GraphActorTest(unittest.TestCase):
             get_actuator_node_indices(graph),
         )
 
+    def test_actor_processes_a_batch_of_graph_observations(self) -> None:
+        actor = GraphActor()
+
+        observations = torch.randn(3, 5, 11)
+        routes = [
+            (0, 1),
+            (1, 0),
+            (1, 2),
+            (2, 1),
+            (0, 3),
+            (3, 0),
+            (3, 4),
+            (4, 3),
+        ]
+
+        actions = actor(
+            observations,
+            routes,
+            actuator_node_indices=(1, 2, 3, 4),
+        )
+
+        self.assertEqual(actions.shape, (3, 4))
+
 
 if __name__ == "__main__":
     unittest.main()

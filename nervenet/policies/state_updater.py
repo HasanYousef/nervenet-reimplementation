@@ -15,4 +15,20 @@ class NodeStateUpdater(nn.Module):
         hidden_states: Tensor,
         messages: Tensor,
     ) -> Tensor:
-        return self.gru(messages, hidden_states)
+        original_shape = hidden_states.shape
+
+        flat_hidden_states = hidden_states.reshape(
+            -1,
+            original_shape[-1],
+        )
+        flat_messages = messages.reshape(
+            -1,
+            original_shape[-1],
+        )
+
+        updated_states = self.gru(
+            flat_messages,
+            flat_hidden_states,
+        )
+
+        return updated_states.reshape(original_shape)

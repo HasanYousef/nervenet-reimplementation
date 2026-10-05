@@ -25,7 +25,7 @@ class ActuatorDecoder(nn.Module):
         )
 
         actuator_hidden_states = hidden_states.index_select(
-            dim=0,
+            dim=-2,
             index=node_indices,
         )
 

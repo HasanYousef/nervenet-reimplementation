@@ -33,6 +33,42 @@ class MessageAggregationTest(unittest.TestCase):
 
         torch.testing.assert_close(result, expected)
 
+    def test_batched_graphs_are_aggregated_independently(self) -> None:
+        hidden_states = torch.tensor(
+            [
+                [
+                    [1.0, 2.0],
+                    [3.0, 4.0],
+                ],
+                [
+                    [10.0, 20.0],
+                    [30.0, 40.0],
+                ],
+            ]
+        )
+
+        routes = [
+            (0, 1),
+            (1, 0),
+        ]
+
+        result = aggregate_messages(hidden_states, routes)
+
+        expected = torch.tensor(
+            [
+                [
+                    [3.0, 4.0],
+                    [1.0, 2.0],
+                ],
+                [
+                    [30.0, 40.0],
+                    [10.0, 20.0],
+                ],
+            ]
+        )
+
+        torch.testing.assert_close(result, expected)
+
 
 if __name__ == "__main__":
     unittest.main()
