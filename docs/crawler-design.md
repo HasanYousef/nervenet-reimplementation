@@ -171,8 +171,16 @@ the static body graph and replaces each returned flat vector with a padded
 `node_count x 11` matrix read from the same MuJoCo state. Physics, actions,
 rewards, termination, and reset behavior remain owned by the base environment.
 
+## Value network
+
+PPO's critic is a separate flat MLP. It flattens the padded graph observation,
+passes it through two 64-value `tanh` hidden layers, and predicts one scalar
+state value per observation. This follows the NerveNet-MLP separation: the
+actor uses the physical graph while the critic evaluates the complete state
+without message passing.
+
 ## Next steps
 
-1. Integrate the graph actor and graph-observation wrapper with PPO.
-2. Add the flat value-function path needed for PPO training.
+1. Adapt the graph actor and flat value network to Stable-Baselines3's policy interface.
+2. Add graph-policy training, saving, loading, evaluation, and viewing commands.
 3. Compare flat and graph policies across multiple training seeds.

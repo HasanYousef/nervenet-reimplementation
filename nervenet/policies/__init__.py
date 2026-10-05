@@ -5,6 +5,7 @@ from nervenet.policies.message_passing import MessagePassingLayer
 from nervenet.policies.graph_processor import GraphProcessor
 from nervenet.policies.actuator_decoder import ActuatorDecoder
 from nervenet.policies.graph_actor import GraphActor
+from nervenet.policies.flat_value_network import FlatValueNetwork
 
 __all__ = [
     "NodeInputEncoder",
@@ -14,4 +15,5 @@ __all__ = [
     "GraphProcessor",
     "ActuatorDecoder",
     "GraphActor",
+    "FlatValueNetwork",
 ]
