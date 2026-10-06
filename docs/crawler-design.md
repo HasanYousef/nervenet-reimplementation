@@ -179,8 +179,17 @@ state value per observation. This follows the NerveNet-MLP separation: the
 actor uses the physical graph while the critic evaluates the complete state
 without message passing.
 
+## Stable-Baselines3 adapter
+
+Stable-Baselines3 normally flattens observations before its policy network. A
+pass-through feature extractor preserves the graph tensor instead. A combined
+actor-critic extractor then sends that tensor to the graph actor and flat value
+network, returning one action mean per actuator and one state value per batch
+item. These adapters contain no additional policy logic beyond satisfying the
+Stable-Baselines3 interface.
+
 ## Next steps
 
-1. Adapt the graph actor and flat value network to Stable-Baselines3's policy interface.
+1. Add the Stable-Baselines3 actor-critic policy and Gaussian action distribution.
 2. Add graph-policy training, saving, loading, evaluation, and viewing commands.
 3. Compare flat and graph policies across multiple training seeds.

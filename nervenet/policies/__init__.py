@@ -6,6 +6,10 @@ from nervenet.policies.graph_processor import GraphProcessor
 from nervenet.policies.actuator_decoder import ActuatorDecoder
 from nervenet.policies.graph_actor import GraphActor
 from nervenet.policies.flat_value_network import FlatValueNetwork
+from nervenet.policies.graph_features_extractor import GraphFeaturesExtractor
+from nervenet.policies.graph_actor_critic_extractor import (
+    GraphActorCriticExtractor,
+)
 
 __all__ = [
     "NodeInputEncoder",
@@ -16,4 +20,6 @@ __all__ = [
     "ActuatorDecoder",
     "GraphActor",
     "FlatValueNetwork",
+    "GraphFeaturesExtractor",
+    "GraphActorCriticExtractor",
 ]
