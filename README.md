@@ -99,8 +99,14 @@ exploitation is visible rather than hidden behind a single return value.
 Use the same `--control-cost-weight` for training and comparison when reporting
 returns from an experiment.
 
-Play the trained policy in the passive MuJoCo viewer:
+Play the trained flat policy in the passive MuJoCo viewer:
 
 ```bash
-mjpython -m nervenet.cli.view_policy --modules 3
+mjpython -m nervenet.cli.view_policy --modules 3 --policy-type flat
+```
+
+Play the trained graph policy with the same viewer:
+
+```bash
+mjpython -m nervenet.cli.view_policy --modules 3 --policy-type graph
 ```

@@ -4,10 +4,9 @@ import time
 
 import mujoco
 import mujoco.viewer
-from stable_baselines3 import PPO
 
-from nervenet.envs import CrawlerEnv
 from nervenet.models.crawler import TORSO_HEIGHT, TORSO_SPACING
+from nervenet.policy_loading import default_policy_path, load_crawler_policy
 
 
 def main() -> None:
@@ -19,18 +18,31 @@ def main() -> None:
     )
     parser.add_argument("--modules", type=int, default=3)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--policy-type",
+        choices=("flat", "graph"),
+        default="flat",
+    )
     args = parser.parse_args()
 
-    model_path = args.model or Path(
-        f"artifacts/flat_policy_{args.modules}_modules.zip"
+    model_path = args.model or default_policy_path(
+        args.policy_type,
+        args.modules,
     )
-    env = CrawlerEnv(module_count=args.modules)
-    policy = PPO.load(model_path, device="cpu")
+    policy, env = load_crawler_policy(
+        model_path=model_path,
+        policy_type=args.policy_type,
+        module_count=args.modules,
+    )
     observation, _ = env.reset(seed=args.seed)
+    crawler_env = env.unwrapped
 
-    with mujoco.viewer.launch_passive(env.model, env.data) as viewer:
+    with mujoco.viewer.launch_passive(
+        crawler_env.model,
+        crawler_env.data,
+    ) as viewer:
         tracked_body = mujoco.mj_name2id(
-            env.model,
+            crawler_env.model,
             mujoco.mjtObj.mjOBJ_BODY,
             "module_1_torso",
         )
@@ -60,7 +72,7 @@ def main() -> None:
                 observation, _ = env.reset(seed=args.seed)
 
             elapsed = time.monotonic() - step_started_at
-            time.sleep(max(0.0, env.control_timestep - elapsed))
+            time.sleep(max(0.0, crawler_env.control_timestep - elapsed))
 
 
 if __name__ == "__main__":

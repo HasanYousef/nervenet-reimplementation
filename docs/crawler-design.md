@@ -199,7 +199,8 @@ optimizer over the graph actor, critic, and exploration parameters.
 
 Graph-policy training is now connected to PPO and covered by a short
 end-to-end optimization test. The training CLI saves the resulting PPO model
-for the next loading and evaluation milestone.
+and the shared policy viewer reconstructs either the flat or graph observation
+environment before loading the corresponding model.
 
-1. Add graph-policy loading, evaluation, and viewing commands.
+1. Extend deterministic evaluation to graph policies.
 2. Compare flat and graph policies across multiple training seeds.
