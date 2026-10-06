@@ -2,10 +2,9 @@ import argparse
 from pathlib import Path
 from statistics import fmean
 
-from stable_baselines3 import PPO
-
 from nervenet.envs import CrawlerEnv
 from nervenet.evaluation import EpisodeResult, run_episode
+from nervenet.policy_loading import default_policy_path, load_crawler_policy
 
 
 def print_summary(
@@ -40,7 +39,7 @@ def print_summary(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Compare random and flat PPO crawler policies."
+        description="Compare random and trained PPO crawler policies."
     )
     parser.add_argument(
         "--model",
@@ -49,6 +48,11 @@ def main() -> None:
     )
     parser.add_argument("--modules", type=int, default=3)
     parser.add_argument("--episodes", type=int, default=5)
+    parser.add_argument(
+        "--policy-type",
+        choices=("flat", "graph"),
+        default="flat",
+    )
     parser.add_argument(
         "--control-cost-weight",
         type=float,
@@ -59,13 +63,19 @@ def main() -> None:
     if args.episodes <= 0:
         parser.error("--episodes must be positive")
 
-    model_path = args.model or Path(
-        f"artifacts/flat_policy_{args.modules}_modules.zip"
+    model_path = args.model or default_policy_path(
+        args.policy_type,
+        args.modules,
     )
-    model = PPO.load(model_path, device="cpu")
+    model, policy_env = load_crawler_policy(
+        model_path=model_path,
+        policy_type=args.policy_type,
+        module_count=args.modules,
+        control_cost_weight=args.control_cost_weight,
+    )
 
     random_results = []
-    flat_results = []
+    policy_results = []
 
     for seed in range(args.episodes):
         random_env = CrawlerEnv(
@@ -82,14 +92,9 @@ def main() -> None:
             )
         )
 
-        flat_env = CrawlerEnv(
-            module_count=args.modules,
-            control_cost_weight=args.control_cost_weight,
-        )
-
-        flat_results.append(
+        policy_results.append(
             run_episode(
-                env=flat_env,
+                env=policy_env,
                 action_selector=lambda observation: model.predict(
                     observation,
                     deterministic=True,
@@ -99,7 +104,7 @@ def main() -> None:
         )
 
     print_summary("Random policy", random_results)
-    print_summary("Flat PPO policy", flat_results)
+    print_summary(f"{args.policy_type.title()} PPO policy", policy_results)
 
 
 if __name__ == "__main__":

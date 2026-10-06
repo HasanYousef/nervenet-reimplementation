@@ -22,10 +22,15 @@ class PolicyLoadingTest(unittest.TestCase):
         self.assertEqual(env.observation_space.shape, (19,))
 
     def test_graph_policy_uses_graph_environment(self) -> None:
-        env = create_policy_environment("graph", 1)
+        env = create_policy_environment(
+            "graph",
+            1,
+            control_cost_weight=0.25,
+        )
 
         self.assertIsInstance(env, GraphObservationWrapper)
         self.assertEqual(env.observation_space.shape, (5, 11))
+        self.assertEqual(env.unwrapped.control_cost_weight, 0.25)
 
     def test_unknown_policy_type_is_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "unknown policy type"):

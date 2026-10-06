@@ -1,7 +1,9 @@
 import unittest
 
 from nervenet.evaluation import run_episode
-from nervenet.envs import CrawlerEnv
+import numpy as np
+
+from nervenet.envs import CrawlerEnv, GraphObservationWrapper
 
 
 class RandomRolloutTest(unittest.TestCase):
@@ -27,6 +29,20 @@ class RandomRolloutTest(unittest.TestCase):
         self.assertLessEqual(first.mean_abs_action, 1.0)
         self.assertGreaterEqual(first.action_saturation_fraction, 0.0)
         self.assertLessEqual(first.action_saturation_fraction, 1.0)
+
+    def test_graph_observation_wrapper_can_be_evaluated(self) -> None:
+        env = GraphObservationWrapper(
+            CrawlerEnv(module_count=1, max_episode_seconds=0.04)
+        )
+
+        result = run_episode(
+            env=env,
+            action_selector=lambda _observation: np.zeros(4),
+            seed=0,
+        )
+
+        self.assertEqual(result.steps, 2)
+        self.assertTrue(result.truncated)
 
 
 if __name__ == "__main__":

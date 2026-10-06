@@ -93,7 +93,18 @@ Compare the frozen flat policy with seeded random actions:
   --control-cost-weight 0.05
 ```
 
-The comparison reports forward and lateral displacement, motor-command
+Evaluate the graph policy with the same metrics and episode seeds:
+
+```bash
+.venv/bin/python -m nervenet.cli.compare_policies \
+  --policy-type graph \
+  --modules 3 \
+  --episodes 20 \
+  --control-cost-weight 0.05
+```
+
+The comparison command supports `--policy-type flat` and
+`--policy-type graph`. It reports forward and lateral displacement, motor-command
 magnitude and saturation, command changes, and actuated joint speed so reward
 exploitation is visible rather than hidden behind a single return value.
 Use the same `--control-cost-weight` for training and comparison when reporting

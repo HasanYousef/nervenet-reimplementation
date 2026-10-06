@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from nervenet.envs import CrawlerEnv
+from nervenet.envs import CrawlerEnv, GraphObservationWrapper
 
 
 @dataclass(frozen=True)
@@ -25,16 +25,17 @@ ActionSelector = Callable[[np.ndarray], np.ndarray]
 
 
 def run_episode(
-    env: CrawlerEnv,
+    env: CrawlerEnv | GraphObservationWrapper,
     action_selector: ActionSelector,
     seed: int,
 ) -> EpisodeResult:
     observation, _ = env.reset(seed=seed)
-    x_start = float(env.data.qpos[0])
-    y_start = float(env.data.qpos[1])
+    crawler_env = env.unwrapped
+    x_start = float(crawler_env.data.qpos[0])
+    y_start = float(crawler_env.data.qpos[1])
 
-    actuated_dof_addresses = env.model.jnt_dofadr[
-        env.model.actuator_trnid[:, 0]
+    actuated_dof_addresses = crawler_env.model.jnt_dofadr[
+        crawler_env.model.actuator_trnid[:, 0]
     ]
 
     total_reward = 0.0
@@ -65,7 +66,9 @@ def run_episode(
 
         observation, reward, terminated, truncated, _ = env.step(action)
 
-        joint_velocities = np.abs(env.data.qvel[actuated_dof_addresses])
+        joint_velocities = np.abs(
+            crawler_env.data.qvel[actuated_dof_addresses]
+        )
         joint_velocity_sum += float(joint_velocities.sum())
         joint_velocity_count += joint_velocities.size
 
@@ -77,8 +80,8 @@ def run_episode(
         seed=seed,
         steps=steps,
         total_reward=total_reward,
-        distance=float(env.data.qpos[0]) - x_start,
-        lateral_distance=float(env.data.qpos[1]) - y_start,
+        distance=float(crawler_env.data.qpos[0]) - x_start,
+        lateral_distance=float(crawler_env.data.qpos[1]) - y_start,
         mean_abs_action=action_magnitude_sum / action_value_count,
         action_saturation_fraction=saturated_action_count / action_value_count,
         mean_abs_action_change=(
