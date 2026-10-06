@@ -84,6 +84,16 @@ structured policy.
 - An actuator belongs to the body containing its target joint.
 - Passive bodies remain graph nodes even when they own no actuator.
 
+Every graph node also records its physical role independently of actuator
+ownership:
+
+- `ROOT` owns the free joint and the crawler's global orientation and motion.
+- `JOINT` owns a non-free joint, including an unactuated passive spine.
+- `BODY` has no joint and supports future fixed or sensor-only bodies.
+
+This metadata does not change policy behavior yet. It provides the node-type
+mapping required for type-specific policy components in the next stage.
+
 For one crawler module, the graph contains one torso and four leg-segment
 nodes. Every additional module adds one torso and four leg-segment nodes.
 

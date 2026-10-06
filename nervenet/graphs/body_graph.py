@@ -1,11 +1,20 @@
 from dataclasses import dataclass
+from enum import Enum
+
 import mujoco
+
+
+class BodyNodeType(Enum):
+    ROOT = "root"
+    JOINT = "joint"
+    BODY = "body"
 
 
 @dataclass(frozen=True)
 class BodyNode:
     body_id: int
     name: str
+    node_type: BodyNodeType
     parent_body_id: int | None
     joint_ids: tuple[int, ...]
     actuator_ids: tuple[int, ...]
@@ -14,6 +23,20 @@ class BodyNode:
 @dataclass(frozen=True)
 class BodyGraph:
     nodes: tuple[BodyNode, ...]
+
+
+def get_body_node_type(
+    model: mujoco.MjModel,
+    joint_ids: tuple[int, ...],
+) -> BodyNodeType:
+    for joint_id in joint_ids:
+        if model.jnt_type[joint_id] == mujoco.mjtJoint.mjJNT_FREE:
+            return BodyNodeType.ROOT
+
+    if joint_ids:
+        return BodyNodeType.JOINT
+
+    return BodyNodeType.BODY
 
 
 def build_body_graph(model: mujoco.MjModel) -> BodyGraph:
@@ -44,6 +67,7 @@ def build_body_graph(model: mujoco.MjModel) -> BodyGraph:
             BodyNode(
                 body_id=body_id,
                 name=name,
+                node_type=get_body_node_type(model, joint_ids),
                 parent_body_id=(None if parent_body_id == 0 else parent_body_id),
                 joint_ids=joint_ids,
                 actuator_ids=actuator_ids,

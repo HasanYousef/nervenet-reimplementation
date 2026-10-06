@@ -1,6 +1,7 @@
 import unittest
 
 from nervenet.graphs import (
+    BodyNodeType,
     build_body_graph,
     get_actuator_node_indices,
     get_message_routes,
@@ -40,6 +41,10 @@ class BodyGraphTest(unittest.TestCase):
         self.assertEqual(second_torso.parent_body_id, first_torso.body_id)
         self.assertEqual(len(second_torso.joint_ids), 1)
         self.assertEqual(second_torso.actuator_ids, ())
+        self.assertEqual(
+            second_torso.node_type,
+            BodyNodeType.JOINT,
+        )
 
     def test_graph_scales_with_module_count(self) -> None:
         one_module = build_body_graph(build_crawler_model(1))
@@ -82,6 +87,25 @@ class BodyGraphTest(unittest.TestCase):
         self.assertEqual(
             get_actuator_node_indices(two_modules),
             (1, 2, 3, 4, 6, 7, 8, 9),
+        )
+
+    def test_nodes_are_classified_by_physical_role(self) -> None:
+        model = build_crawler_model(1)
+        graph = build_body_graph(model)
+
+        node_types = {node.name: node.node_type for node in graph.nodes}
+
+        self.assertEqual(
+            node_types["module_1_torso"],
+            BodyNodeType.ROOT,
+        )
+        self.assertEqual(
+            node_types["module_1_left_upper_leg"],
+            BodyNodeType.JOINT,
+        )
+        self.assertEqual(
+            node_types["module_1_left_lower_leg"],
+            BodyNodeType.JOINT,
         )
 
 

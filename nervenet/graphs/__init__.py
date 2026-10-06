@@ -1,6 +1,7 @@
 from nervenet.graphs.body_graph import (
     BodyGraph,
     BodyNode,
+    BodyNodeType,
     build_body_graph,
     get_actuator_node_indices,
     get_message_routes,
@@ -16,6 +17,7 @@ from nervenet.graphs.observations import (
 __all__ = [
     "BodyGraph",
     "BodyNode",
+    "BodyNodeType",
     "build_body_graph",
     "GRAPH_OBSERVATION_WIDTH",
     "get_graph_observations",
