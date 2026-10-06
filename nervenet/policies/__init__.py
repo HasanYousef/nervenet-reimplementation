@@ -10,6 +10,9 @@ from nervenet.policies.graph_features_extractor import GraphFeaturesExtractor
 from nervenet.policies.graph_actor_critic_extractor import (
     GraphActorCriticExtractor,
 )
+from nervenet.policies.graph_actor_critic_policy import (
+    GraphActorCriticPolicy,
+)
 
 __all__ = [
     "NodeInputEncoder",
@@ -22,4 +25,5 @@ __all__ = [
     "FlatValueNetwork",
     "GraphFeaturesExtractor",
     "GraphActorCriticExtractor",
+    "GraphActorCriticPolicy",
 ]

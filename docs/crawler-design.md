@@ -188,8 +188,15 @@ network, returning one action mean per actuator and one state value per batch
 item. These adapters contain no additional policy logic beyond satisfying the
 Stable-Baselines3 interface.
 
+The custom actor-critic policy uses those outputs directly rather than adding
+another actor or critic head. It combines the actor's action means with one
+learned Gaussian log-standard-deviation per actuator, giving PPO a stochastic
+continuous-action distribution for exploration. The policy validates that its
+actuator-node mapping matches the environment's action dimension and builds one
+optimizer over the graph actor, critic, and exploration parameters.
+
 ## Next steps
 
-1. Add the Stable-Baselines3 actor-critic policy and Gaussian action distribution.
-2. Add graph-policy training, saving, loading, evaluation, and viewing commands.
+1. Add graph-policy training and a short PPO integration test.
+2. Add saving, loading, evaluation, and viewing commands.
 3. Compare flat and graph policies across multiple training seeds.
