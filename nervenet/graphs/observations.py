@@ -4,6 +4,13 @@ import numpy as np
 from nervenet.graphs.body_graph import BodyGraph, BodyNode
 
 
+ROOT_JOINT_OBSERVATION_SIZE = 11
+BODY_EXTERNAL_FORCE_SIZE = 6
+GRAPH_OBSERVATION_WIDTH = (
+    ROOT_JOINT_OBSERVATION_SIZE + BODY_EXTERNAL_FORCE_SIZE
+)
+
+
 def get_hinge_observation(
     model: mujoco.MjModel,
     data: mujoco.MjData,
@@ -64,8 +71,13 @@ def get_body_observation(
 
         observations.append(observation)
 
-    if not observations:
-        return np.empty(0, dtype=np.float64)
+    observations.append(
+        np.array(
+            data.cfrc_ext[node.body_id],
+            dtype=np.float64,
+            copy=True,
+        )
+    )
 
     return np.concatenate(observations)
 
@@ -75,6 +87,10 @@ def get_graph_observations(
     data: mujoco.MjData,
     graph: BodyGraph,
 ) -> list[np.ndarray]:
+    # MuJoCo does not populate cfrc_ext unless post-constraint forces are
+    # requested by a sensor or computed explicitly.
+    mujoco.mj_rnePostConstraint(model, data)
+
     return [get_body_observation(model, data, node) for node in graph.nodes]
 
 

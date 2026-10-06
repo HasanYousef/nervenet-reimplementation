@@ -66,6 +66,7 @@ class GraphObservationTest(unittest.TestCase):
         knee_joint_id = knee.joint_ids[0]
         data.qpos[model.jnt_qposadr[knee_joint_id]] = 0.25
         data.qvel[model.jnt_dofadr[knee_joint_id]] = -0.75
+        data.cfrc_ext[knee.body_id] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 
         root_observation = get_body_observation(
             model,
@@ -74,8 +75,11 @@ class GraphObservationTest(unittest.TestCase):
         )
         knee_observation = get_body_observation(model, data, knee)
 
-        self.assertEqual(root_observation.shape, (11,))
-        np.testing.assert_array_equal(knee_observation, [0.25, -0.75])
+        self.assertEqual(root_observation.shape, (17,))
+        np.testing.assert_array_equal(
+            knee_observation,
+            [0.25, -0.75, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        )
 
     def test_one_module_graph_observation_shapes(self) -> None:
         model = build_crawler_model(1)
@@ -86,9 +90,9 @@ class GraphObservationTest(unittest.TestCase):
 
         self.assertEqual(
             [observation.shape for observation in observations],
-            [(11,), (2,), (2,), (2,), (2,)],
+            [(17,), (8,), (8,), (8,), (8,)],
         )
-        self.assertEqual(sum(observation.size for observation in observations), 19)
+        self.assertEqual(sum(observation.size for observation in observations), 49)
 
     def test_three_module_graph_observations_preserve_all_state_values(self) -> None:
         model = build_crawler_model(3)
@@ -98,11 +102,11 @@ class GraphObservationTest(unittest.TestCase):
         observations = get_graph_observations(model, data, graph)
 
         self.assertEqual(len(observations), 15)
-        self.assertEqual(observations[0].shape, (11,))
+        self.assertEqual(observations[0].shape, (17,))
         self.assertTrue(
-            all(observation.shape == (2,) for observation in observations[1:])
+            all(observation.shape == (8,) for observation in observations[1:])
         )
-        self.assertEqual(sum(observation.size for observation in observations), 39)
+        self.assertEqual(sum(observation.size for observation in observations), 129)
 
     def test_padding_preserves_values_and_fills_unused_columns_with_zero(self) -> None:
         observations = [
@@ -120,7 +124,7 @@ class GraphObservationTest(unittest.TestCase):
             ],
         )
 
-    def test_two_module_observations_pad_to_ten_by_eleven(self) -> None:
+    def test_two_module_observations_pad_to_ten_by_seventeen(self) -> None:
         model = build_crawler_model(2)
         data = mujoco.MjData(model)
         graph = build_body_graph(model)
@@ -128,8 +132,8 @@ class GraphObservationTest(unittest.TestCase):
 
         padded = pad_graph_observations(observations)
 
-        self.assertEqual(padded.shape, (10, 11))
-        np.testing.assert_array_equal(padded[1, 2:], np.zeros(9))
+        self.assertEqual(padded.shape, (10, 17))
+        np.testing.assert_array_equal(padded[1, 8:], np.zeros(9))
 
 
 if __name__ == "__main__":

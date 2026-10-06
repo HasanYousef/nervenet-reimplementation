@@ -52,7 +52,7 @@ class GraphActorTest(unittest.TestCase):
     def test_actor_processes_a_batch_of_graph_observations(self) -> None:
         actor = GraphActor()
 
-        observations = torch.randn(3, 5, 11)
+        observations = torch.randn(3, 5, 17)
         routes = [
             (0, 1),
             (1, 0),

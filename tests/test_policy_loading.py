@@ -29,7 +29,7 @@ class PolicyLoadingTest(unittest.TestCase):
         )
 
         self.assertIsInstance(env, GraphObservationWrapper)
-        self.assertEqual(env.observation_space.shape, (5, 11))
+        self.assertEqual(env.observation_space.shape, (5, 17))
         self.assertEqual(env.unwrapped.control_cost_weight, 0.25)
 
     def test_unknown_policy_type_is_rejected(self) -> None:

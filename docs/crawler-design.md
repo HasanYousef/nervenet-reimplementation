@@ -96,29 +96,37 @@ aggregation and node-state updates remain separate policy components.
 ## Local observations
 
 Changing simulation state is kept separate from the static body graph. At each
-step, every body node receives the values owned by its joint:
+step, every graph node combines the values owned by its joint with the external
+torque and force acting on its associated MuJoCo body:
 
 - The root torso receives height, quaternion rotation, three linear velocities,
-  and three angular velocities. Global X and Y position are excluded, leaving
-  11 values.
+  three angular velocities, three external torque values, and three external
+  force values. Global X and Y position are excluded, leaving 17 values.
 - A hip, knee, or passive spine body receives its hinge angle and angular
-  velocity, leaving two values.
+  velocity followed by three external torque values and three external force
+  values, leaving eight values.
 
 Graph observations remain separated by node and preserve graph order. A
-three-module crawler has one 11-value root observation and fourteen 2-value
-hinge observations, containing the same 39 state values as the flat policy's
-observation in a different organization.
+three-module crawler has one 17-value root observation and fourteen 8-value
+hinge observations. Unlike the flat baseline observation, this structured
+observation includes body-specific force information.
+
+MuJoCo stores each body wrench in `cfrc_ext` using torque-before-force order and
+does not populate that array for this model automatically. Graph observation
+collection therefore runs MuJoCo's post-constraint force calculation before
+reading the body values. These quantities use MuJoCo's center-of-mass-based
+`c` frame, which is oriented like the world frame.
 
 Before entering a neural network, shorter observations are padded with zeros to
 the root observation width. The resulting matrix has one row per graph node and
-11 columns. A two-module crawler therefore produces a `10 x 11` input matrix;
+17 columns. A two-module crawler therefore produces a `10 x 17` input matrix;
 padding changes the layout but does not add simulated state.
 
 ## Shared input encoder
 
 The first learned policy component applies one shared PyTorch linear layer and
 `tanh` activation to every padded node row. With the current defaults, each
-11-value observation becomes a 64-value hidden state. The same 768 trainable
+17-value observation becomes a 64-value hidden state. The same 1,152 trainable
 parameters process every body node, so increasing the module count changes the
 number of rows but does not change the encoder's parameter count.
 
@@ -174,7 +182,7 @@ aggregation isolated within each snapshot.
 The base crawler environment continues to return its original flat observation
 for baseline compatibility. A separate Gymnasium observation wrapper derives
 the static body graph and replaces each returned flat vector with a padded
-`node_count x 11` matrix read from the same MuJoCo state. Physics, actions,
+`node_count x 17` matrix read from the same MuJoCo state. Physics, actions,
 rewards, termination, and reset behavior remain owned by the base environment.
 
 ## Value network

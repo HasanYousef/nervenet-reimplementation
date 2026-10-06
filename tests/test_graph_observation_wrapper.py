@@ -10,15 +10,15 @@ class GraphObservationWrapperTest(unittest.TestCase):
         one_module = GraphObservationWrapper(CrawlerEnv(module_count=1))
         three_modules = GraphObservationWrapper(CrawlerEnv(module_count=3))
 
-        self.assertEqual(one_module.observation_space.shape, (5, 11))
-        self.assertEqual(three_modules.observation_space.shape, (15, 11))
+        self.assertEqual(one_module.observation_space.shape, (5, 17))
+        self.assertEqual(three_modules.observation_space.shape, (15, 17))
 
     def test_reset_returns_graph_observation(self) -> None:
         env = GraphObservationWrapper(CrawlerEnv(module_count=2))
 
         observation, info = env.reset(seed=7)
 
-        self.assertEqual(observation.shape, (10, 11))
+        self.assertEqual(observation.shape, (10, 17))
         self.assertEqual(observation.dtype, np.float64)
         self.assertTrue(env.observation_space.contains(observation))
         self.assertEqual(info, {})
@@ -31,7 +31,7 @@ class GraphObservationWrapperTest(unittest.TestCase):
             np.zeros(env.action_space.shape, dtype=np.float64)
         )
 
-        self.assertEqual(observation.shape, (10, 11))
+        self.assertEqual(observation.shape, (10, 17))
         self.assertTrue(env.observation_space.contains(observation))
 
 

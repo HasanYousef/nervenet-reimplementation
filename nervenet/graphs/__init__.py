@@ -6,6 +6,7 @@ from nervenet.graphs.body_graph import (
     get_message_routes,
 )
 from nervenet.graphs.observations import (
+    GRAPH_OBSERVATION_WIDTH,
     get_graph_observations,
     get_hinge_observation,
     get_root_observation,
@@ -16,6 +17,7 @@ __all__ = [
     "BodyGraph",
     "BodyNode",
     "build_body_graph",
+    "GRAPH_OBSERVATION_WIDTH",
     "get_graph_observations",
     "get_hinge_observation",
     "get_root_observation",
