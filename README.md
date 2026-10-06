@@ -26,8 +26,9 @@ GRU and decodes motor-owning node states into action means in MuJoCo actuator
 order. The same actor instance supports crawler morphologies with different
 module and actuator counts. A Gymnasium observation wrapper exposes the same
 environment state as padded per-node matrices for graph-policy training while
-leaving the flat PPO baseline environment unchanged. PPO integration remains
-the next milestone.
+leaving the flat PPO baseline environment unchanged. A custom
+Stable-Baselines3 policy now connects the graph actor and flat critic to PPO,
+and the graph training path is covered by a short end-to-end optimization test.
 
 Preview the passive spine of a two-module crawler:
 
@@ -67,6 +68,16 @@ Train and save the three-module flat PPO baseline:
 
 ```bash
 .venv/bin/python -m nervenet.cli.train_flat \
+  --modules 3 \
+  --timesteps 100000 \
+  --seed 0 \
+  --control-cost-weight 0.05
+```
+
+Train and save the three-module graph PPO policy:
+
+```bash
+.venv/bin/python -m nervenet.cli.train_graph \
   --modules 3 \
   --timesteps 100000 \
   --seed 0 \

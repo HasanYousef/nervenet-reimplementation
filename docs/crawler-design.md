@@ -197,6 +197,9 @@ optimizer over the graph actor, critic, and exploration parameters.
 
 ## Next steps
 
-1. Add graph-policy training and a short PPO integration test.
-2. Add saving, loading, evaluation, and viewing commands.
-3. Compare flat and graph policies across multiple training seeds.
+Graph-policy training is now connected to PPO and covered by a short
+end-to-end optimization test. The training CLI saves the resulting PPO model
+for the next loading and evaluation milestone.
+
+1. Add graph-policy loading, evaluation, and viewing commands.
+2. Compare flat and graph policies across multiple training seeds.
