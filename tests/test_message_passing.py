@@ -35,6 +35,12 @@ class MessagePassingLayerTest(unittest.TestCase):
 
         self.assertIsNotNone(hidden_states.grad)
         self.assertTrue(torch.isfinite(hidden_states.grad).all())
+        self.assertTrue(
+            all(
+                parameter.grad is not None
+                for parameter in layer.message_network.parameters()
+            )
+        )
 
 
 if __name__ == "__main__":

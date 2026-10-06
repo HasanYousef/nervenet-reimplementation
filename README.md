@@ -21,10 +21,11 @@ torso receives its orientation and motion state, while hip, knee, and passive
 spine bodies receive their own joint angle and angular velocity.
 One shared input encoder converts every padded local observation into a
 fixed-width hidden representation without depending on the number of nodes.
-The graph actor then performs recurrent neighbor message passing with a shared
-GRU and decodes motor-owning node states into action means in MuJoCo actuator
-order. The same actor instance supports crawler morphologies with different
-module and actuator counts. A Gymnasium observation wrapper exposes the same
+During every propagation round, a shared two-layer `tanh` MLP computes outgoing
+messages, incoming messages are averaged, and a shared GRU updates every node.
+The graph actor then decodes motor-owning node states into action means in
+MuJoCo actuator order. The same actor instance supports crawler morphologies
+with different module and actuator counts. A Gymnasium observation wrapper exposes the same
 environment state as padded per-node matrices for graph-policy training while
 leaving the flat PPO baseline environment unchanged. A custom
 Stable-Baselines3 policy now connects the graph actor and flat critic to PPO,

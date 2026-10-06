@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from torch import Tensor, nn
 
 from nervenet.policies.message_aggregation import aggregate_messages
+from nervenet.policies.message_network import MessageNetwork
 from nervenet.policies.state_updater import NodeStateUpdater
 
 
@@ -10,6 +11,7 @@ class MessagePassingLayer(nn.Module):
     def __init__(self, hidden_size: int = 64) -> None:
         super().__init__()
 
+        self.message_network = MessageNetwork(hidden_size)
         self.state_updater = NodeStateUpdater(hidden_size)
 
     def forward(
@@ -17,6 +19,7 @@ class MessagePassingLayer(nn.Module):
         hidden_states: Tensor,
         routes: Sequence[tuple[int, int]],
     ) -> Tensor:
-        messages = aggregate_messages(hidden_states, routes)
+        outgoing_messages = self.message_network(hidden_states)
+        messages = aggregate_messages(outgoing_messages, routes)
 
         return self.state_updater(hidden_states, messages)
