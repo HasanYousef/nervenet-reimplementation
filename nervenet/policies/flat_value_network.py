@@ -2,12 +2,14 @@ from math import prod
 
 from torch import Tensor, nn
 
+from nervenet.policies.defaults import DEFAULT_HIDDEN_SIZE
+
 
 class FlatValueNetwork(nn.Module):
     def __init__(
         self,
         observation_shape: tuple[int, ...],
-        hidden_size: int = 64,
+        hidden_size: int = DEFAULT_HIDDEN_SIZE,
     ) -> None:
         super().__init__()
 

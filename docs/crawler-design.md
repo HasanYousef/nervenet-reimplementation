@@ -145,7 +145,10 @@ update.
 A graph processor recurrently applies that same layer for a configurable
 number of propagation steps. Each round moves information across one more
 physical connection without adding another set of trainable parameters. The
-initial implementation uses two rounds by default.
+default is four rounds, which sits within the paper's tested range of three to
+six. The default hidden width of 64 and default propagation depth are defined
+once in the policy configuration and reused by every policy layer, the trainer,
+and the CLI.
 
 ## Actuator output
 

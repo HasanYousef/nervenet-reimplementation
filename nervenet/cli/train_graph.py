@@ -1,6 +1,10 @@
 import argparse
 from pathlib import Path
 
+from nervenet.policies.defaults import (
+    DEFAULT_HIDDEN_SIZE,
+    DEFAULT_MESSAGE_PASSING_STEPS,
+)
 from nervenet.training import train_graph_policy
 
 
@@ -19,8 +23,16 @@ def main() -> None:
         type=float,
         default=0.05,
     )
-    parser.add_argument("--hidden-size", type=int, default=64)
-    parser.add_argument("--message-passing-steps", type=int, default=2)
+    parser.add_argument(
+        "--hidden-size",
+        type=int,
+        default=DEFAULT_HIDDEN_SIZE,
+    )
+    parser.add_argument(
+        "--message-passing-steps",
+        type=int,
+        default=DEFAULT_MESSAGE_PASSING_STEPS,
+    )
     args = parser.parse_args()
     output = args.output or Path(f"artifacts/graph_policy_{args.modules}_modules")
 

@@ -1,8 +1,10 @@
 from torch import Tensor, nn
 
+from nervenet.policies.defaults import DEFAULT_HIDDEN_SIZE
+
 
 class NodeStateUpdater(nn.Module):
-    def __init__(self, hidden_size: int = 64) -> None:
+    def __init__(self, hidden_size: int = DEFAULT_HIDDEN_SIZE) -> None:
         super().__init__()
 
         self.gru = nn.GRUCell(

@@ -2,14 +2,18 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
+from nervenet.policies.defaults import (
+    DEFAULT_HIDDEN_SIZE,
+    DEFAULT_MESSAGE_PASSING_STEPS,
+)
 from nervenet.policies.message_passing import MessagePassingLayer
 
 
 class GraphProcessor(nn.Module):
     def __init__(
         self,
-        hidden_size: int = 64,
-        message_passing_steps: int = 2,
+        hidden_size: int = DEFAULT_HIDDEN_SIZE,
+        message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS,
     ) -> None:
         super().__init__()
 

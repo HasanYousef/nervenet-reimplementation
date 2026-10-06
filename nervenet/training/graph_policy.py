@@ -6,6 +6,10 @@ from nervenet.graphs import (
     get_message_routes,
 )
 from nervenet.policies import GraphActorCriticPolicy
+from nervenet.policies.defaults import (
+    DEFAULT_HIDDEN_SIZE,
+    DEFAULT_MESSAGE_PASSING_STEPS,
+)
 
 
 def train_graph_policy(
@@ -13,8 +17,8 @@ def train_graph_policy(
     seed: int,
     module_count: int = 3,
     control_cost_weight: float = 0.05,
-    hidden_size: int = 64,
-    message_passing_steps: int = 2,
+    hidden_size: int = DEFAULT_HIDDEN_SIZE,
+    message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS,
 ) -> PPO:
     if total_timesteps <= 0:
         raise ValueError("total_timesteps must be positive")

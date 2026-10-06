@@ -8,6 +8,10 @@ from stable_baselines3.common.distributions import DiagGaussianDistribution
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.type_aliases import Schedule
 
+from nervenet.policies.defaults import (
+    DEFAULT_HIDDEN_SIZE,
+    DEFAULT_MESSAGE_PASSING_STEPS,
+)
 from nervenet.policies.graph_actor_critic_extractor import (
     GraphActorCriticExtractor,
 )
@@ -24,8 +28,8 @@ class GraphActorCriticPolicy(ActorCriticPolicy):
         lr_schedule: Schedule,
         routes: Sequence[tuple[int, int]],
         actuator_node_indices: Sequence[int],
-        hidden_size: int = 64,
-        message_passing_steps: int = 2,
+        hidden_size: int = DEFAULT_HIDDEN_SIZE,
+        message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS,
         **kwargs: Any,
     ) -> None:
         self.routes = tuple(routes)

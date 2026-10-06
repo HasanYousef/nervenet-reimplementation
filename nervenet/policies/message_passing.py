@@ -2,13 +2,14 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
+from nervenet.policies.defaults import DEFAULT_HIDDEN_SIZE
 from nervenet.policies.message_aggregation import aggregate_messages
 from nervenet.policies.message_network import MessageNetwork
 from nervenet.policies.state_updater import NodeStateUpdater
 
 
 class MessagePassingLayer(nn.Module):
-    def __init__(self, hidden_size: int = 64) -> None:
+    def __init__(self, hidden_size: int = DEFAULT_HIDDEN_SIZE) -> None:
         super().__init__()
 
         self.message_network = MessageNetwork(hidden_size)

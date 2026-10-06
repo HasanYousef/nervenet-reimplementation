@@ -1,3 +1,7 @@
+from nervenet.policies.defaults import (
+    DEFAULT_HIDDEN_SIZE,
+    DEFAULT_MESSAGE_PASSING_STEPS,
+)
 from nervenet.policies.input_encoder import NodeInputEncoder
 from nervenet.policies.message_aggregation import aggregate_messages
 from nervenet.policies.message_network import MessageNetwork
@@ -16,6 +20,8 @@ from nervenet.policies.graph_actor_critic_policy import (
 )
 
 __all__ = [
+    "DEFAULT_HIDDEN_SIZE",
+    "DEFAULT_MESSAGE_PASSING_STEPS",
     "NodeInputEncoder",
     "aggregate_messages",
     "MessageNetwork",

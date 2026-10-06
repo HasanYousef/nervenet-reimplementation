@@ -2,6 +2,10 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
+from nervenet.policies.defaults import (
+    DEFAULT_HIDDEN_SIZE,
+    DEFAULT_MESSAGE_PASSING_STEPS,
+)
 from nervenet.policies.flat_value_network import FlatValueNetwork
 from nervenet.policies.graph_actor import GraphActor
 
@@ -12,8 +16,8 @@ class GraphActorCriticExtractor(nn.Module):
         observation_shape: tuple[int, ...],
         routes: Sequence[tuple[int, int]],
         actuator_node_indices: Sequence[int],
-        hidden_size: int = 64,
-        message_passing_steps: int = 2,
+        hidden_size: int = DEFAULT_HIDDEN_SIZE,
+        message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS,
     ) -> None:
         super().__init__()
 
