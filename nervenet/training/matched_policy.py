@@ -4,7 +4,7 @@ from nervenet.envs import CrawlerEnv, GraphObservationWrapper
 from nervenet.policies import MatchedActorCriticPolicy
 
 
-MATCHED_ACTOR_HIDDEN_SIZE = 192
+MATCHED_ACTOR_HIDDEN_SIZE = 151
 
 
 def create_matched_policy(

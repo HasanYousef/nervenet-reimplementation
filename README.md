@@ -92,7 +92,8 @@ Train and save the three-module graph PPO policy:
 
 Train the three-module matched MLP baseline. It receives the same graph
 observations as the graph policy, flattens them, and has approximately the same
-actor parameter count while using the exact same critic and PPO output path:
+active actor parameter count while using the exact same critic and PPO output
+path:
 
 ```bash
 .venv/bin/python -m nervenet.cli.train_matched \

@@ -48,6 +48,22 @@ class MatchedPolicyTrainingTest(unittest.TestCase):
             parameter.numel()
             for parameter in graph.policy.mlp_extractor.actor.parameters()
         )
+        active_node_types = {
+            node_type.value
+            for node_type in graph.policy.mlp_extractor.node_types
+        }
+        state_updater = (
+            graph.policy.mlp_extractor.actor.processor.layer.state_updater
+        )
+        inactive_graph_actor_parameters = sum(
+            parameter.numel()
+            for node_type, gru in state_updater.grus.items()
+            if node_type not in active_node_types
+            for parameter in gru.parameters()
+        )
+        active_graph_actor_parameters = (
+            graph_actor_parameters - inactive_graph_actor_parameters
+        )
         matched_critic_parameters = sum(
             parameter.numel()
             for parameter in matched.policy.mlp_extractor.critic.parameters()
@@ -62,12 +78,15 @@ class MatchedPolicyTrainingTest(unittest.TestCase):
         graph_total_parameters = sum(
             parameter.numel() for parameter in graph.policy.parameters()
         )
+        active_graph_total_parameters = (
+            graph_total_parameters - inactive_graph_actor_parameters
+        )
         actor_relative_difference = abs(
-            matched_actor_parameters - graph_actor_parameters
-        ) / graph_actor_parameters
+            matched_actor_parameters - active_graph_actor_parameters
+        ) / active_graph_actor_parameters
         total_relative_difference = abs(
-            matched_total_parameters - graph_total_parameters
-        ) / graph_total_parameters
+            matched_total_parameters - active_graph_total_parameters
+        ) / active_graph_total_parameters
 
         self.assertLess(actor_relative_difference, 0.01)
         self.assertEqual(matched_critic_parameters, graph_critic_parameters)
