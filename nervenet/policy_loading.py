@@ -46,6 +46,10 @@ def load_crawler_policy(
         module_count,
         control_cost_weight,
     )
-    model = PPO.load(model_path, env=env, device="cpu")
+    model = PPO.load(
+        model_path,
+        device="cpu",
+        verbose=0,
+    )
 
     return model, env

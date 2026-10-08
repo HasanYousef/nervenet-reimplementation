@@ -228,10 +228,11 @@ Graph-policy training is now connected to PPO and covered by a short
 end-to-end optimization test. The training CLI saves the resulting PPO model
 and the shared policy viewer reconstructs either the flat or graph observation
 environment before loading the corresponding model.
-The deterministic episode evaluator also accepts either observation interface,
-while reading displacement and joint diagnostics from the same underlying
-MuJoCo environment. This allows random, flat, and graph results to use the same
-episode seeds and metrics.
+The deterministic episode evaluator accepts either trained-policy observation
+interface while reading displacement and joint diagnostics from the same
+underlying MuJoCo environment. Flat and graph policies can therefore be
+evaluated independently with the same episode seeds and metrics. Random-policy
+rollout remains a separate environment sanity check.
 
 1. Audit the remaining propagation details against the paper before spending
    more compute.

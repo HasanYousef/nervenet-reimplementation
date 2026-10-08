@@ -90,10 +90,11 @@ Train and save the three-module graph PPO policy:
   --control-cost-weight 0.05
 ```
 
-Compare the frozen flat policy with seeded random actions:
+Evaluate the flat policy over reproducible episode seeds:
 
 ```bash
-.venv/bin/python -m nervenet.cli.compare_policies \
+.venv/bin/python -m nervenet.cli.evaluate_policy \
+  --policy-type flat \
   --modules 3 \
   --episodes 5 \
   --control-cost-weight 0.05
@@ -102,18 +103,18 @@ Compare the frozen flat policy with seeded random actions:
 Evaluate the graph policy with the same metrics and episode seeds:
 
 ```bash
-.venv/bin/python -m nervenet.cli.compare_policies \
+.venv/bin/python -m nervenet.cli.evaluate_policy \
   --policy-type graph \
   --modules 3 \
   --episodes 20 \
   --control-cost-weight 0.05
 ```
 
-The comparison command supports `--policy-type flat` and
+The evaluation command supports `--policy-type flat` and
 `--policy-type graph`. It reports forward and lateral displacement, motor-command
 magnitude and saturation, command changes, and actuated joint speed so reward
 exploitation is visible rather than hidden behind a single return value.
-Use the same `--control-cost-weight` for training and comparison when reporting
+Use the same `--control-cost-weight` for training and evaluation when reporting
 returns from an experiment.
 
 Play the trained flat policy in the passive MuJoCo viewer:

@@ -2,7 +2,6 @@ import argparse
 from pathlib import Path
 from statistics import fmean
 
-from nervenet.envs import CrawlerEnv
 from nervenet.evaluation import EpisodeResult, run_episode
 from nervenet.policy_loading import default_policy_path, load_crawler_policy
 
@@ -39,7 +38,7 @@ def print_summary(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Compare random and trained PPO crawler policies."
+        description="Evaluate one trained PPO crawler policy."
     )
     parser.add_argument(
         "--model",
@@ -67,44 +66,29 @@ def main() -> None:
         args.policy_type,
         args.modules,
     )
-    model, policy_env = load_crawler_policy(
+    model, env = load_crawler_policy(
         model_path=model_path,
         policy_type=args.policy_type,
         module_count=args.modules,
         control_cost_weight=args.control_cost_weight,
     )
 
-    random_results = []
-    policy_results = []
-
-    for seed in range(args.episodes):
-        random_env = CrawlerEnv(
-            module_count=args.modules,
-            control_cost_weight=args.control_cost_weight,
+    results = [
+        run_episode(
+            env=env,
+            action_selector=lambda observation: model.predict(
+                observation,
+                deterministic=True,
+            )[0],
+            seed=seed,
         )
-        random_env.action_space.seed(seed)
+        for seed in range(args.episodes)
+    ]
 
-        random_results.append(
-            run_episode(
-                env=random_env,
-                action_selector=lambda _observation: random_env.action_space.sample(),
-                seed=seed,
-            )
-        )
-
-        policy_results.append(
-            run_episode(
-                env=policy_env,
-                action_selector=lambda observation: model.predict(
-                    observation,
-                    deterministic=True,
-                )[0],
-                seed=seed,
-            )
-        )
-
-    print_summary("Random policy", random_results)
-    print_summary(f"{args.policy_type.title()} PPO policy", policy_results)
+    print_summary(
+        f"{args.policy_type.title()} PPO policy",
+        results,
+    )
 
 
 if __name__ == "__main__":
