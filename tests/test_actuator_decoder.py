@@ -10,14 +10,16 @@ class ActuatorDecoderTest(unittest.TestCase):
         decoder = ActuatorDecoder(hidden_size=2)
 
         with torch.no_grad():
-            decoder.linear.weight.copy_(torch.tensor([[1.0, 0.0]]))
-            decoder.linear.bias.zero_()
+            decoder.network[0].weight.copy_(torch.eye(2))
+            decoder.network[0].bias.zero_()
+            decoder.network[2].weight.copy_(torch.tensor([[1.0, 0.0]]))
+            decoder.network[2].bias.zero_()
 
         hidden_states = torch.tensor(
             [
-                [10.0, 1.0],
-                [20.0, 2.0],
-                [30.0, 3.0],
+                [0.1, 1.0],
+                [0.2, 2.0],
+                [0.3, 3.0],
             ]
         )
 
@@ -28,7 +30,7 @@ class ActuatorDecoderTest(unittest.TestCase):
 
         torch.testing.assert_close(
             result,
-            torch.tensor([30.0, 10.0]),
+            torch.tanh(torch.tensor([0.3, 0.1])),
         )
 
     def test_same_decoder_handles_different_actuator_counts(self) -> None:
@@ -50,20 +52,22 @@ class ActuatorDecoderTest(unittest.TestCase):
         decoder = ActuatorDecoder(hidden_size=2)
 
         with torch.no_grad():
-            decoder.linear.weight.copy_(torch.tensor([[1.0, 0.0]]))
-            decoder.linear.bias.zero_()
+            decoder.network[0].weight.copy_(torch.eye(2))
+            decoder.network[0].bias.zero_()
+            decoder.network[2].weight.copy_(torch.tensor([[1.0, 0.0]]))
+            decoder.network[2].bias.zero_()
 
         hidden_states = torch.tensor(
             [
                 [
-                    [10.0, 1.0],
-                    [20.0, 2.0],
-                    [30.0, 3.0],
+                    [0.1, 1.0],
+                    [0.2, 2.0],
+                    [0.3, 3.0],
                 ],
                 [
-                    [100.0, 1.0],
-                    [200.0, 2.0],
-                    [300.0, 3.0],
+                    [-0.1, 1.0],
+                    [-0.2, 2.0],
+                    [-0.3, 3.0],
                 ],
             ]
         )
@@ -73,11 +77,13 @@ class ActuatorDecoderTest(unittest.TestCase):
             actuator_node_indices=(2, 0),
         )
 
-        expected = torch.tensor(
-            [
-                [30.0, 10.0],
-                [300.0, 100.0],
-            ]
+        expected = torch.tanh(
+            torch.tensor(
+                [
+                    [0.3, 0.1],
+                    [-0.3, -0.1],
+                ]
+            )
         )
 
         torch.testing.assert_close(result, expected)

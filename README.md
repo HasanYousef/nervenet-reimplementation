@@ -28,9 +28,9 @@ During every propagation round, a shared two-layer `tanh` MLP computes outgoing
 messages and incoming messages are averaged. Root, joint-owning, and jointless
 body nodes then use separate GRU update networks, with all nodes of the same
 type sharing parameters.
-The graph actor then decodes motor-owning node states into action means in
-MuJoCo actuator order. The same actor instance supports crawler morphologies
-with different module and actuator counts. A Gymnasium observation wrapper exposes the same
+The graph actor then uses a shared two-layer MLP to decode motor-owning node
+states into action means in MuJoCo actuator order. The same actor instance
+supports crawler morphologies with different module and actuator counts. A Gymnasium observation wrapper exposes the same
 environment state as padded per-node matrices for graph-policy training while
 leaving the flat PPO baseline environment unchanged. A custom
 Stable-Baselines3 policy now connects the graph actor and flat critic to PPO,

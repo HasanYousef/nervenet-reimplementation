@@ -174,9 +174,10 @@ and the CLI.
 
 The body graph records which node owns each MuJoCo actuator. A deterministic
 mapping selects motor-owning hidden-state rows in actuator-ID order, skipping
-passive torso and spine nodes. One shared linear decoder maps every selected
-64-value node state to a scalar action mean. It does not squash or sample the
-action; Gaussian sampling and action-space handling belong to PPO integration.
+passive torso and spine nodes. One shared two-layer MLP maps every selected
+64-value node state through a 64-value `tanh` hidden layer to a scalar action
+mean. It does not squash or sample the final action; Gaussian sampling and
+action-space handling belong to PPO integration.
 
 ## Graph actor
 
@@ -232,6 +233,6 @@ while reading displacement and joint diagnostics from the same underlying
 MuJoCo environment. This allows random, flat, and graph results to use the same
 episode seeds and metrics.
 
-1. Audit the remaining graph decoder and propagation details against the paper
-   before spending more compute.
+1. Audit the remaining propagation details against the paper before spending
+   more compute.
 2. Compare flat and graph policies across multiple training seeds.

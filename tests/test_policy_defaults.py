@@ -17,7 +17,15 @@ class PolicyDefaultsTest(unittest.TestCase):
             DEFAULT_HIDDEN_SIZE,
         )
         self.assertEqual(
-            actor.decoder.linear.in_features,
+            actor.decoder.network[0].in_features,
+            DEFAULT_HIDDEN_SIZE,
+        )
+        self.assertEqual(
+            actor.decoder.network[0].out_features,
+            DEFAULT_HIDDEN_SIZE,
+        )
+        self.assertEqual(
+            actor.decoder.network[2].in_features,
             DEFAULT_HIDDEN_SIZE,
         )
 

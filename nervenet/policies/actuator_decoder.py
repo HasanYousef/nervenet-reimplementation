@@ -10,9 +10,10 @@ class ActuatorDecoder(nn.Module):
     def __init__(self, hidden_size: int = DEFAULT_HIDDEN_SIZE) -> None:
         super().__init__()
 
-        self.linear = nn.Linear(
-            in_features=hidden_size,
-            out_features=1,
+        self.network = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size),
+            nn.Tanh(),
+            nn.Linear(hidden_size, 1),
         )
 
     def forward(
@@ -31,4 +32,4 @@ class ActuatorDecoder(nn.Module):
             index=node_indices,
         )
 
-        return self.linear(actuator_hidden_states).squeeze(-1)
+        return self.network(actuator_hidden_states).squeeze(-1)
