@@ -198,6 +198,21 @@ the static body graph and replaces each returned flat vector with a padded
 `node_count x 17` matrix read from the same MuJoCo state. Physics, actions,
 rewards, termination, and reset behavior remain owned by the base environment.
 
+## Matched MLP baseline
+
+The matched baseline receives exactly the same padded graph-observation matrix
+as the graph policy, but Stable-Baselines3 flattens the matrix before applying
+an ordinary MLP. It therefore has access to the same simulated state without
+using message routes, node types, parameter sharing between nodes, or recurrent
+propagation.
+
+For the current three-module experiment, separate actor and critic networks
+each use two 136-value hidden layers. This produces 108,689 trainable
+parameters, compared with 109,198 in the graph policy: a difference below
+0.5%. The width is specifically capacity-matched for the three-module crawler;
+other module counts still share observations but are not guaranteed to have
+the same parameter count.
+
 ## Value network
 
 PPO's critic is a separate flat MLP. It flattens the padded graph observation,
@@ -226,14 +241,14 @@ optimizer over the graph actor, critic, and exploration parameters.
 
 Graph-policy training is now connected to PPO and covered by a short
 end-to-end optimization test. The training CLI saves the resulting PPO model
-and the shared policy viewer reconstructs either the flat or graph observation
-environment before loading the corresponding model.
+and the shared policy viewer reconstructs the flat or graph-matrix observation
+environment required by the selected model.
 The deterministic episode evaluator accepts either trained-policy observation
 interface while reading displacement and joint diagnostics from the same
-underlying MuJoCo environment. Flat and graph policies can therefore be
-evaluated independently with the same episode seeds and metrics. Random-policy
-rollout remains a separate environment sanity check.
+underlying MuJoCo environment. Original flat, matched MLP, and graph policies
+can therefore be evaluated independently with the same episode seeds and
+metrics. Random-policy rollout remains a separate environment sanity check.
 
 1. Audit the remaining propagation details against the paper before spending
    more compute.
-2. Compare flat and graph policies across multiple training seeds.
+2. Compare matched MLP and graph policies across multiple training seeds.

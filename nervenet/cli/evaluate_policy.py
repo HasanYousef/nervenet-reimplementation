@@ -49,7 +49,7 @@ def main() -> None:
     parser.add_argument("--episodes", type=int, default=5)
     parser.add_argument(
         "--policy-type",
-        choices=("flat", "graph"),
+        choices=("flat", "matched", "graph"),
         default="flat",
     )
     parser.add_argument(
@@ -85,10 +85,12 @@ def main() -> None:
         for seed in range(args.episodes)
     ]
 
-    print_summary(
-        f"{args.policy_type.title()} PPO policy",
-        results,
-    )
+    policy_names = {
+        "flat": "Flat PPO policy",
+        "matched": "Matched MLP PPO policy",
+        "graph": "Graph PPO policy",
+    }
+    print_summary(policy_names[args.policy_type], results)
 
 
 if __name__ == "__main__":

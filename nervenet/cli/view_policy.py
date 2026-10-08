@@ -20,7 +20,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--policy-type",
-        choices=("flat", "graph"),
+        choices=("flat", "matched", "graph"),
         default="flat",
     )
     args = parser.parse_args()

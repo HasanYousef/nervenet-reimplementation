@@ -31,8 +31,8 @@ type sharing parameters.
 The graph actor then uses a shared two-layer MLP to decode motor-owning node
 states into action means in MuJoCo actuator order. The same actor instance
 supports crawler morphologies with different module and actuator counts. A Gymnasium observation wrapper exposes the same
-environment state as padded per-node matrices for graph-policy training while
-leaving the flat PPO baseline environment unchanged. A custom
+environment state as padded per-node matrices for graph-policy training and a
+matched MLP baseline while leaving the original flat PPO baseline unchanged. A custom
 Stable-Baselines3 policy now connects the graph actor and flat critic to PPO,
 and the graph training path is covered by a short end-to-end optimization test.
 
@@ -90,6 +90,18 @@ Train and save the three-module graph PPO policy:
   --control-cost-weight 0.05
 ```
 
+Train the three-module matched MLP baseline. It receives the same graph
+observations as the graph policy, flattens them, and has approximately the same
+number of parameters:
+
+```bash
+.venv/bin/python -m nervenet.cli.train_matched \
+  --modules 3 \
+  --timesteps 100000 \
+  --seed 0 \
+  --control-cost-weight 0.05
+```
+
 Evaluate the flat policy over reproducible episode seeds:
 
 ```bash
@@ -110,8 +122,18 @@ Evaluate the graph policy with the same metrics and episode seeds:
   --control-cost-weight 0.05
 ```
 
-The evaluation command supports `--policy-type flat` and
-`--policy-type graph`. It reports forward and lateral displacement, motor-command
+Evaluate the matched MLP policy independently:
+
+```bash
+.venv/bin/python -m nervenet.cli.evaluate_policy \
+  --policy-type matched \
+  --modules 3 \
+  --episodes 20 \
+  --control-cost-weight 0.05
+```
+
+The evaluation command supports `--policy-type flat`, `--policy-type matched`,
+and `--policy-type graph`. It reports forward and lateral displacement, motor-command
 magnitude and saturation, command changes, and actuated joint speed so reward
 exploitation is visible rather than hidden behind a single return value.
 Use the same `--control-cost-weight` for training and evaluation when reporting
@@ -128,3 +150,5 @@ Play the trained graph policy with the same viewer:
 ```bash
 mjpython -m nervenet.cli.view_policy --modules 3 --policy-type graph
 ```
+
+The same viewer accepts `--policy-type matched` for the matched MLP baseline.

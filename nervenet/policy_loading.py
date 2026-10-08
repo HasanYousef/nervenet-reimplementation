@@ -6,7 +6,7 @@ from stable_baselines3 import PPO
 from nervenet.envs import CrawlerEnv, GraphObservationWrapper
 
 
-PolicyType = Literal["flat", "graph"]
+PolicyType = Literal["flat", "matched", "graph"]
 PolicyEnvironment = CrawlerEnv | GraphObservationWrapper
 
 
@@ -29,7 +29,7 @@ def create_policy_environment(
 
     if policy_type == "flat":
         return env
-    if policy_type == "graph":
+    if policy_type in ("matched", "graph"):
         return GraphObservationWrapper(env)
 
     raise ValueError(f"unknown policy type: {policy_type}")
