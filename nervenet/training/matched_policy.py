@@ -1,9 +1,10 @@
 from stable_baselines3 import PPO
 
 from nervenet.envs import CrawlerEnv, GraphObservationWrapper
+from nervenet.policies import MatchedActorCriticPolicy
 
 
-MATCHED_MLP_HIDDEN_SIZE = 136
+MATCHED_ACTOR_HIDDEN_SIZE = 192
 
 
 def create_matched_policy(
@@ -20,13 +21,10 @@ def create_matched_policy(
     )
 
     return PPO(
-        policy="MlpPolicy",
+        policy=MatchedActorCriticPolicy,
         env=env,
         policy_kwargs={
-            "net_arch": {
-                "pi": [MATCHED_MLP_HIDDEN_SIZE, MATCHED_MLP_HIDDEN_SIZE],
-                "vf": [MATCHED_MLP_HIDDEN_SIZE, MATCHED_MLP_HIDDEN_SIZE],
-            }
+            "actor_hidden_size": MATCHED_ACTOR_HIDDEN_SIZE,
         },
         seed=seed,
         device="cpu",

@@ -2,16 +2,15 @@ from collections.abc import Sequence
 from typing import Any
 
 from gymnasium import spaces
-import torch
-from torch import nn
-from stable_baselines3.common.distributions import DiagGaussianDistribution
-from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.type_aliases import Schedule
 
 from nervenet.graphs import BodyNodeType
 from nervenet.policies.defaults import (
     DEFAULT_HIDDEN_SIZE,
     DEFAULT_MESSAGE_PASSING_STEPS,
+)
+from nervenet.policies.direct_actor_critic_policy import (
+    DirectActorCriticPolicy,
 )
 from nervenet.policies.graph_actor_critic_extractor import (
     GraphActorCriticExtractor,
@@ -21,7 +20,9 @@ from nervenet.policies.graph_features_extractor import (
 )
 
 
-class GraphActorCriticPolicy(ActorCriticPolicy):
+class GraphActorCriticPolicy(DirectActorCriticPolicy):
+    action_dimension_error = "Actuator-node count must match the action-space size"
+
     def __init__(
         self,
         observation_space: spaces.Space,
@@ -58,30 +59,4 @@ class GraphActorCriticPolicy(ActorCriticPolicy):
             node_types=self.node_types,
             hidden_size=self.hidden_size,
             message_passing_steps=self.message_passing_steps,
-        )
-
-    def _build(self, lr_schedule: Schedule) -> None:
-        self._build_mlp_extractor()
-
-        if not isinstance(self.action_dist, DiagGaussianDistribution):
-            raise TypeError("Graph policy requires a continuous Box action space")
-
-        if self.mlp_extractor.latent_dim_pi != self.action_dist.action_dim:
-            raise ValueError(
-                "Actuator-node count must match the action-space size"
-            )
-
-        self.action_net = nn.Identity()
-        self.value_net = nn.Identity()
-        self.log_std = nn.Parameter(
-            torch.full(
-                (self.action_dist.action_dim,),
-                self.log_std_init,
-            )
-        )
-
-        self.optimizer = self.optimizer_class(
-            self.parameters(),
-            lr=lr_schedule(1),
-            **self.optimizer_kwargs,
         )

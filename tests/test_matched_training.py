@@ -40,17 +40,40 @@ class MatchedPolicyTrainingTest(unittest.TestCase):
             verbose=0,
         )
 
-        matched_parameters = sum(
+        matched_actor_parameters = sum(
+            parameter.numel()
+            for parameter in matched.policy.mlp_extractor.actor.parameters()
+        )
+        graph_actor_parameters = sum(
+            parameter.numel()
+            for parameter in graph.policy.mlp_extractor.actor.parameters()
+        )
+        matched_critic_parameters = sum(
+            parameter.numel()
+            for parameter in matched.policy.mlp_extractor.critic.parameters()
+        )
+        graph_critic_parameters = sum(
+            parameter.numel()
+            for parameter in graph.policy.mlp_extractor.critic.parameters()
+        )
+        matched_total_parameters = sum(
             parameter.numel() for parameter in matched.policy.parameters()
         )
-        graph_parameters = sum(
+        graph_total_parameters = sum(
             parameter.numel() for parameter in graph.policy.parameters()
         )
-        relative_difference = abs(
-            matched_parameters - graph_parameters
-        ) / graph_parameters
+        actor_relative_difference = abs(
+            matched_actor_parameters - graph_actor_parameters
+        ) / graph_actor_parameters
+        total_relative_difference = abs(
+            matched_total_parameters - graph_total_parameters
+        ) / graph_total_parameters
 
-        self.assertLess(relative_difference, 0.01)
+        self.assertLess(actor_relative_difference, 0.01)
+        self.assertEqual(matched_critic_parameters, graph_critic_parameters)
+        self.assertLess(total_relative_difference, 0.01)
+        self.assertFalse(matched.policy.ortho_init)
+        self.assertFalse(graph.policy.ortho_init)
 
 
 if __name__ == "__main__":

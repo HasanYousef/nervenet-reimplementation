@@ -206,12 +206,14 @@ an ordinary MLP. It therefore has access to the same simulated state without
 using message routes, node types, parameter sharing between nodes, or recurrent
 propagation.
 
-For the current three-module experiment, separate actor and critic networks
-each use two 136-value hidden layers. This produces 108,689 trainable
-parameters, compared with 109,198 in the graph policy: a difference below
-0.5%. The width is specifically capacity-matched for the three-module crawler;
-other module counts still share observations but are not guaranteed to have
-the same parameter count.
+For the current three-module experiment, the flat actor uses two 192-value
+hidden layers. It has 88,524 trainable parameters, compared with 88,577 in the
+graph actor. Both policies use the exact same 20,609-parameter flat critic,
+direct Gaussian-output adapter, and initialization behavior. Their complete
+policies contain 109,145 and 109,198 parameters respectively. The actor width
+is specifically capacity-matched for the three-module crawler; other module
+counts still share observations but are not guaranteed to have the same
+parameter count.
 
 ## Value network
 
