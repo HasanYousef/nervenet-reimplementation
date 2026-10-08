@@ -103,6 +103,29 @@ path:
   --control-cost-weight 0.05
 ```
 
+Continue either policy from a checkpoint. Here `--timesteps 100000` means
+100,000 additional environment steps. A separate output is required so the
+source checkpoint remains unchanged:
+
+```bash
+.venv/bin/python -m nervenet.cli.train_graph \
+  --modules 3 \
+  --timesteps 100000 \
+  --control-cost-weight 0.05 \
+  --resume artifacts/graph_controlled_100k_seed0.zip \
+  --output artifacts/graph_controlled_200k_seed0
+
+.venv/bin/python -m nervenet.cli.train_matched \
+  --modules 3 \
+  --timesteps 100000 \
+  --control-cost-weight 0.05 \
+  --resume artifacts/matched_controlled_100k_seed0.zip \
+  --output artifacts/matched_controlled_200k_seed0
+```
+
+Stable-Baselines3 may finish the current PPO rollout, so the stored timestep
+counter can be slightly above the requested round number.
+
 Evaluate the flat policy over reproducible episode seeds:
 
 ```bash

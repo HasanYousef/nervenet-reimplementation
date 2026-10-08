@@ -1,11 +1,17 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from stable_baselines3 import PPO
 
 from nervenet.envs import CrawlerEnv, GraphObservationWrapper
 from nervenet.graphs import get_actuator_node_indices, get_message_routes
-from nervenet.policies import GraphActorCriticPolicy
+from nervenet.policies import (
+    GraphActorCriticPolicy,
+    MatchedActorCriticPolicy,
+)
 from nervenet.training.matched_policy import (
+    MATCHED_ACTOR_HIDDEN_SIZE,
     create_matched_policy,
     train_matched_policy,
 )
@@ -93,6 +99,35 @@ class MatchedPolicyTrainingTest(unittest.TestCase):
         self.assertLess(total_relative_difference, 0.01)
         self.assertFalse(matched.policy.ortho_init)
         self.assertFalse(graph.policy.ortho_init)
+
+    def test_resume_adds_timesteps_to_saved_matched_policy(self) -> None:
+        env = GraphObservationWrapper(CrawlerEnv(module_count=1))
+        model = PPO(
+            policy=MatchedActorCriticPolicy,
+            env=env,
+            policy_kwargs={
+                "actor_hidden_size": MATCHED_ACTOR_HIDDEN_SIZE,
+            },
+            n_steps=8,
+            batch_size=8,
+            n_epochs=1,
+            seed=0,
+            device="cpu",
+            verbose=0,
+        )
+        model.learn(total_timesteps=8)
+
+        with TemporaryDirectory() as directory:
+            checkpoint = Path(directory) / "matched_checkpoint"
+            model.save(checkpoint)
+            resumed = train_matched_policy(
+                total_timesteps=8,
+                seed=0,
+                module_count=1,
+                resume_from=checkpoint.with_suffix(".zip"),
+            )
+
+        self.assertEqual(resumed.num_timesteps, 16)
 
 
 if __name__ == "__main__":

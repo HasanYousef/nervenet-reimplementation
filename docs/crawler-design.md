@@ -242,6 +242,17 @@ continuous-action distribution for exploration. The policy validates that its
 actuator-node mapping matches the environment's action dimension and builds one
 optimizer over the graph actor, critic, and exploration parameters.
 
+## Training checkpoints
+
+Graph and matched-policy training can continue from a saved PPO checkpoint.
+Continuation restores the learned policy, critic, optimizer state, and stored
+timestep counter, then learns for the requested number of additional
+environment steps without resetting that counter. The CLI requires a separate
+output path during continuation so an earlier experimental checkpoint is not
+overwritten accidentally. The environment is reconstructed from the supplied
+module count and control-cost weight; incompatible observation or action spaces
+are rejected during checkpoint loading.
+
 ## Next steps
 
 Graph-policy training is now connected to PPO and covered by a short

@@ -11,12 +11,23 @@ from nervenet.training import train_graph_policy
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train the graph PPO crawler policy.")
     parser.add_argument("--modules", type=int, default=3)
-    parser.add_argument("--timesteps", type=int, default=10_000)
+    parser.add_argument(
+        "--timesteps",
+        type=int,
+        default=10_000,
+        help="Timesteps to train, or additional timesteps when resuming.",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--output",
         type=Path,
         default=None,
+    )
+    parser.add_argument(
+        "--resume",
+        type=Path,
+        default=None,
+        help="Checkpoint to continue training from.",
     )
     parser.add_argument(
         "--control-cost-weight",
@@ -34,6 +45,10 @@ def main() -> None:
         default=DEFAULT_MESSAGE_PASSING_STEPS,
     )
     args = parser.parse_args()
+
+    if args.resume is not None and args.output is None:
+        parser.error("--output is required when --resume is used")
+
     output = args.output or Path(f"artifacts/graph_policy_{args.modules}_modules")
 
     model = train_graph_policy(
@@ -43,6 +58,7 @@ def main() -> None:
         control_cost_weight=args.control_cost_weight,
         hidden_size=args.hidden_size,
         message_passing_steps=args.message_passing_steps,
+        resume_from=args.resume,
     )
 
     output.parent.mkdir(parents=True, exist_ok=True)
