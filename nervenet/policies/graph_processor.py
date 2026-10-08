@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
+from nervenet.graphs import BodyNodeType
 from nervenet.policies.defaults import (
     DEFAULT_HIDDEN_SIZE,
     DEFAULT_MESSAGE_PASSING_STEPS,
@@ -27,8 +28,9 @@ class GraphProcessor(nn.Module):
         self,
         hidden_states: Tensor,
         routes: Sequence[tuple[int, int]],
+        node_types: Sequence[BodyNodeType],
     ) -> Tensor:
         for _ in range(self.message_passing_steps):
-            hidden_states = self.layer(hidden_states, routes)
+            hidden_states = self.layer(hidden_states, routes, node_types)
 
         return hidden_states

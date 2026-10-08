@@ -36,6 +36,7 @@ def train_graph_policy(
         policy_kwargs={
             "routes": get_message_routes(env.graph),
             "actuator_node_indices": get_actuator_node_indices(env.graph),
+            "node_types": tuple(node.node_type for node in env.graph.nodes),
             "hidden_size": hidden_size,
             "message_passing_steps": message_passing_steps,
         },

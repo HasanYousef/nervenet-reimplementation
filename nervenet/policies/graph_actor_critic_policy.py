@@ -8,6 +8,7 @@ from stable_baselines3.common.distributions import DiagGaussianDistribution
 from stable_baselines3.common.policies import ActorCriticPolicy
 from stable_baselines3.common.type_aliases import Schedule
 
+from nervenet.graphs import BodyNodeType
 from nervenet.policies.defaults import (
     DEFAULT_HIDDEN_SIZE,
     DEFAULT_MESSAGE_PASSING_STEPS,
@@ -28,12 +29,14 @@ class GraphActorCriticPolicy(ActorCriticPolicy):
         lr_schedule: Schedule,
         routes: Sequence[tuple[int, int]],
         actuator_node_indices: Sequence[int],
+        node_types: Sequence[BodyNodeType],
         hidden_size: int = DEFAULT_HIDDEN_SIZE,
         message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS,
         **kwargs: Any,
     ) -> None:
         self.routes = tuple(routes)
         self.actuator_node_indices = tuple(actuator_node_indices)
+        self.node_types = tuple(node_types)
         self.hidden_size = hidden_size
         self.message_passing_steps = message_passing_steps
 
@@ -52,6 +55,7 @@ class GraphActorCriticPolicy(ActorCriticPolicy):
             observation_shape=self.observation_space.shape,
             routes=self.routes,
             actuator_node_indices=self.actuator_node_indices,
+            node_types=self.node_types,
             hidden_size=self.hidden_size,
             message_passing_steps=self.message_passing_steps,
         )

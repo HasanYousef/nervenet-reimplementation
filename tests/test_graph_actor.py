@@ -4,6 +4,7 @@ import mujoco
 import torch
 
 from nervenet.graphs import (
+    BodyNodeType,
     build_body_graph,
     get_actuator_node_indices,
     get_graph_observations,
@@ -47,6 +48,7 @@ class GraphActorTest(unittest.TestCase):
             observation_tensor,
             get_message_routes(graph),
             get_actuator_node_indices(graph),
+            tuple(node.node_type for node in graph.nodes),
         )
 
     def test_actor_processes_a_batch_of_graph_observations(self) -> None:
@@ -68,6 +70,7 @@ class GraphActorTest(unittest.TestCase):
             observations,
             routes,
             actuator_node_indices=(1, 2, 3, 4),
+            node_types=(BodyNodeType.ROOT,) + (BodyNodeType.JOINT,) * 4,
         )
 
         self.assertEqual(actions.shape, (3, 4))

@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
-from nervenet.graphs import GRAPH_OBSERVATION_WIDTH
+from nervenet.graphs import BodyNodeType, GRAPH_OBSERVATION_WIDTH
 from nervenet.policies.actuator_decoder import ActuatorDecoder
 from nervenet.policies.defaults import (
     DEFAULT_HIDDEN_SIZE,
@@ -33,9 +33,10 @@ class GraphActor(nn.Module):
         node_observations: Tensor,
         routes: Sequence[tuple[int, int]],
         actuator_node_indices: Sequence[int],
+        node_types: Sequence[BodyNodeType],
     ) -> Tensor:
         hidden_states = self.encoder(node_observations)
-        hidden_states = self.processor(hidden_states, routes)
+        hidden_states = self.processor(hidden_states, routes, node_types)
 
         return self.decoder(
             hidden_states,

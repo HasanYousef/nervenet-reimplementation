@@ -18,12 +18,16 @@ class GraphActorCriticPolicyTest(unittest.TestCase):
         self.actuator_node_indices = get_actuator_node_indices(
             self.env.graph
         )
+        self.node_types = tuple(
+            node.node_type for node in self.env.graph.nodes
+        )
         self.policy = GraphActorCriticPolicy(
             self.env.observation_space,
             self.env.action_space,
             lambda _: 3e-4,
             routes=self.routes,
             actuator_node_indices=self.actuator_node_indices,
+            node_types=self.node_types,
         )
 
     def test_forward_returns_actions_values_and_log_probabilities(self) -> None:
@@ -88,6 +92,7 @@ class GraphActorCriticPolicyTest(unittest.TestCase):
                 lambda _: 3e-4,
                 routes=self.routes,
                 actuator_node_indices=(1, 2, 3),
+                node_types=self.node_types,
             )
 
 

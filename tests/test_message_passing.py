@@ -2,6 +2,7 @@ import unittest
 
 import torch
 
+from nervenet.graphs import BodyNodeType
 from nervenet.policies import MessagePassingLayer
 
 
@@ -21,7 +22,9 @@ class MessagePassingLayerTest(unittest.TestCase):
             (4, 3),
         ]
 
-        updated_states = layer(hidden_states, routes)
+        node_types = (BodyNodeType.ROOT,) + (BodyNodeType.JOINT,) * 4
+
+        updated_states = layer(hidden_states, routes, node_types)
 
         self.assertEqual(updated_states.shape, (5, 64))
 
@@ -30,7 +33,13 @@ class MessagePassingLayerTest(unittest.TestCase):
         hidden_states = torch.randn(3, 64, requires_grad=True)
         routes = [(0, 1), (1, 0), (1, 2), (2, 1)]
 
-        updated_states = layer(hidden_states, routes)
+        node_types = (
+            BodyNodeType.ROOT,
+            BodyNodeType.JOINT,
+            BodyNodeType.BODY,
+        )
+
+        updated_states = layer(hidden_states, routes, node_types)
         updated_states.sum().backward()
 
         self.assertIsNotNone(hidden_states.grad)

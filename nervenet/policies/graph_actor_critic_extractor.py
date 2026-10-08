@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
+from nervenet.graphs import BodyNodeType
 from nervenet.policies.defaults import (
     DEFAULT_HIDDEN_SIZE,
     DEFAULT_MESSAGE_PASSING_STEPS,
@@ -16,6 +17,7 @@ class GraphActorCriticExtractor(nn.Module):
         observation_shape: tuple[int, ...],
         routes: Sequence[tuple[int, int]],
         actuator_node_indices: Sequence[int],
+        node_types: Sequence[BodyNodeType],
         hidden_size: int = DEFAULT_HIDDEN_SIZE,
         message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS,
     ) -> None:
@@ -23,6 +25,7 @@ class GraphActorCriticExtractor(nn.Module):
 
         self.routes = tuple(routes)
         self.actuator_node_indices = tuple(actuator_node_indices)
+        self.node_types = tuple(node_types)
 
         self.latent_dim_pi = len(self.actuator_node_indices)
         self.latent_dim_vf = 1
@@ -51,6 +54,7 @@ class GraphActorCriticExtractor(nn.Module):
             observations,
             self.routes,
             self.actuator_node_indices,
+            self.node_types,
         )
 
     def forward_critic(self, observations: Tensor) -> Tensor:

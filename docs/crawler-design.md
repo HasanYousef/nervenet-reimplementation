@@ -149,16 +149,18 @@ message-passing stages.
 One message-passing round first applies a shared two-layer `tanh` MLP to every
 node's hidden state. The resulting outgoing messages are sent along the graph's
 directed routes and averaged at each receiver. Nodes with no incoming route
-receive a zero message. A shared GRU cell then combines each node's aggregated
-neighbor message with its current 64-value hidden state. The output preserves
-the `node_count x 64` shape, and gradients flow through message computation,
+receive a zero message. A type-specific GRU cell then combines each node's
+aggregated neighbor message with its current 64-value hidden state. Root,
+joint-owning, and jointless body nodes have separate GRU parameters, while all
+nodes of the same type share one GRU. The output preserves the
+`node_count x 64` shape, and gradients flow through message computation,
 aggregation, and the state update.
 
-Aggregation contains no learned parameters. The message MLP and GRU parameters
-are shared by every node, so the same message-passing layer handles crawler
-graphs with different module counts. This matches the paper's reported
-experimental choice of an MLP message function, average aggregation, and a GRU
-update.
+Aggregation contains no learned parameters. The message MLP is shared by every
+node, and each type-specific GRU is shared by every node of that type. The
+parameter count therefore remains independent of crawler module count. This
+matches the paper's MLP message function, average aggregation, GRU update, and
+node-type-specific update functions.
 
 A graph processor recurrently applies that same layer for a configurable
 number of propagation steps. Each round moves information across one more
@@ -230,6 +232,6 @@ while reading displacement and joint diagnostics from the same underlying
 MuJoCo environment. This allows random, flat, and graph results to use the same
 episode seeds and metrics.
 
-1. Continue auditing node types, local observations, and propagation depth
-   against the paper before spending more compute.
+1. Audit the remaining graph decoder and propagation details against the paper
+   before spending more compute.
 2. Compare flat and graph policies across multiple training seeds.

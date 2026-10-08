@@ -2,6 +2,7 @@ import unittest
 
 import torch
 
+from nervenet.graphs import BodyNodeType
 from nervenet.policies import GraphProcessor
 
 
@@ -15,7 +16,9 @@ class GraphProcessorTest(unittest.TestCase):
         hidden_states = torch.randn(5, 64)
         routes = [(0, 1), (1, 0), (1, 2), (2, 1)]
 
-        result = processor(hidden_states, routes)
+        node_types = (BodyNodeType.ROOT,) + (BodyNodeType.JOINT,) * 4
+
+        result = processor(hidden_states, routes, node_types)
 
         self.assertEqual(result.shape, (5, 64))
 

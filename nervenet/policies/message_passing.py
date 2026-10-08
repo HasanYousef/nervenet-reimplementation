@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from torch import Tensor, nn
 
+from nervenet.graphs import BodyNodeType
 from nervenet.policies.defaults import DEFAULT_HIDDEN_SIZE
 from nervenet.policies.message_aggregation import aggregate_messages
 from nervenet.policies.message_network import MessageNetwork
@@ -19,8 +20,9 @@ class MessagePassingLayer(nn.Module):
         self,
         hidden_states: Tensor,
         routes: Sequence[tuple[int, int]],
+        node_types: Sequence[BodyNodeType],
     ) -> Tensor:
         outgoing_messages = self.message_network(hidden_states)
         messages = aggregate_messages(outgoing_messages, routes)
 
-        return self.state_updater(hidden_states, messages)
+        return self.state_updater(hidden_states, messages, node_types)

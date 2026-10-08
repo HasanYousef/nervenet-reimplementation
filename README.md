@@ -25,7 +25,9 @@ from whether they own an actuator.
 One shared input encoder converts every padded local observation into a
 fixed-width hidden representation without depending on the number of nodes.
 During every propagation round, a shared two-layer `tanh` MLP computes outgoing
-messages, incoming messages are averaged, and a shared GRU updates every node.
+messages and incoming messages are averaged. Root, joint-owning, and jointless
+body nodes then use separate GRU update networks, with all nodes of the same
+type sharing parameters.
 The graph actor then decodes motor-owning node states into action means in
 MuJoCo actuator order. The same actor instance supports crawler morphologies
 with different module and actuator counts. A Gymnasium observation wrapper exposes the same
