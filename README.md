@@ -64,6 +64,52 @@ Run the model tests:
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
+## Managed experiments
+
+Use the experiment CLI for research runs. One name owns the immutable
+configuration, checkpoints, deterministic evaluations, raw SB3 logs, training
+sessions, and software-version metadata:
+
+```bash
+.venv/bin/python -m nervenet.cli.experiment start \
+  --name graph-v0-seed0 \
+  --policy-type graph \
+  --modules 3 \
+  --timesteps 1000000 \
+  --checkpoint-every 100000 \
+  --evaluation-episodes 20 \
+  --seed 0 \
+  --control-cost-weight 0.05
+```
+
+Continue the same experiment from its latest checkpoint:
+
+```bash
+.venv/bin/python -m nervenet.cli.experiment continue \
+  --name graph-v0-seed0 \
+  --timesteps 500000
+```
+
+Evaluate or view its latest checkpoint without repeating its configuration:
+
+```bash
+.venv/bin/python -m nervenet.cli.experiment evaluate \
+  --name graph-v0-seed0
+
+mjpython -m nervenet.cli.experiment view \
+  --name graph-v0-seed0
+```
+
+Experiments are stored under `experiments/<name>/`. Checkpoints use their real
+completed PPO timestep, such as `step_000100352.zip`. `experiment.json` embeds
+the complete configuration, session histories, checkpoint metrics, aggregate
+and per-episode evaluations, Git revisions, and dependency versions. Raw SB3
+CSV and JSON logs are also retained separately for every continuation session.
+See [docs/experiments.md](docs/experiments.md) for the lifecycle and schema.
+
+The lower-level commands below remain useful for short debugging runs and
+manual checkpoint management.
+
 Run one reproducible random-policy episode as an environment sanity check:
 
 ```bash

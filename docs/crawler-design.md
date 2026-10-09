@@ -244,21 +244,28 @@ optimizer over the graph actor, critic, and exploration parameters.
 
 ## Training checkpoints
 
-Graph and matched-policy training can continue from a saved PPO checkpoint.
-Continuation restores the learned policy, critic, optimizer state, and stored
-timestep counter, then learns for the requested number of additional
-environment steps without resetting that counter. The CLI requires a separate
-output path during continuation so an earlier experimental checkpoint is not
-overwritten accidentally. The environment is reconstructed from the supplied
-module count and control-cost weight; incompatible observation or action spaces
-are rejected during checkpoint loading.
+The managed experiment layer owns long research runs for graph and matched
+policies. It records an immutable configuration and creates checkpoints only
+after complete PPO rollout/update boundaries. Every checkpoint is evaluated on
+fixed seeds and stored with its training metrics and individual episode results
+in an atomically updated manifest. Each continuation restores the policy,
+critic, optimizer, and timestep counter, while its SB3 logs and software
+revision are recorded as a distinct session.
+
+The lower-level graph and matched training commands can also continue directly
+from a saved PPO checkpoint. Their explicit output requirement prevents an
+earlier checkpoint from being overwritten. The environment is reconstructed
+from the supplied module count and control-cost weight; incompatible
+observation or action spaces are rejected during checkpoint loading. See
+`docs/experiments.md` for the managed lifecycle.
 
 ## Next steps
 
-Graph-policy training is now connected to PPO and covered by a short
-end-to-end optimization test. The training CLI saves the resulting PPO model
-and the shared policy viewer reconstructs the flat or graph-matrix observation
-environment required by the selected model.
+Graph-policy training is connected to PPO and covered by short end-to-end
+optimization and experiment-continuation tests. The experiment CLI manages
+configuration, periodic checkpointing, evaluation, logs, metadata, and resume
+behavior, while the shared policy viewer reconstructs the graph-matrix
+observation environment required by the selected model.
 The deterministic episode evaluator accepts either trained-policy observation
 interface while reading displacement and joint diagnostics from the same
 underlying MuJoCo environment. Original flat, matched MLP, and graph policies
