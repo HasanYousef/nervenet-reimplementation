@@ -79,7 +79,8 @@ sessions, and software-version metadata:
   --checkpoint-every 100000 \
   --evaluation-episodes 20 \
   --seed 0 \
-  --control-cost-weight 0.05
+  --control-cost-weight 0.05 \
+  --target-kl 0.03
 ```
 
 Continue the same experiment from its latest checkpoint:
@@ -205,7 +206,10 @@ Evaluate the matched MLP policy independently:
 The evaluation command supports `--policy-type flat`, `--policy-type matched`,
 and `--policy-type graph`. It reports forward and lateral displacement, motor-command
 magnitude and saturation, command changes, and actuated joint speed so reward
-exploitation is visible rather than hidden behind a single return value.
+exploitation is visible rather than hidden behind a single return value. The
+lateral diagnostics include signed and absolute displacement, absolute lateral
+speed, and final heading error; signed drift alone can hide left/right failures
+that cancel across episodes.
 Use the same `--control-cost-weight` for training and evaluation when reporting
 returns from an experiment.
 

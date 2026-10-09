@@ -1,4 +1,5 @@
 import argparse
+from math import degrees
 from pathlib import Path
 from typing import Any
 
@@ -7,6 +8,7 @@ from nervenet.experiments import (
     ExperimentRunner,
     ExperimentStore,
 )
+from nervenet.experiments.manifest import default_ppo_config
 from nervenet.policies.defaults import (
     DEFAULT_HIDDEN_SIZE,
     DEFAULT_MESSAGE_PASSING_STEPS,
@@ -32,6 +34,18 @@ def _print_evaluation(evaluation: dict[str, Any]) -> None:
     print(
         "  Mean lateral distance: "
         f"{summary['mean_lateral_distance']:.3f} m"
+    )
+    print(
+        "  Mean absolute lateral distance: "
+        f"{summary['mean_absolute_lateral_distance']:.3f} m"
+    )
+    print(
+        "  Mean absolute lateral speed: "
+        f"{summary['mean_absolute_lateral_velocity']:.3f} m/s"
+    )
+    print(
+        "  Mean final heading error: "
+        f"{degrees(summary['mean_final_heading_error_radians']):.1f} deg"
     )
     print(f"  Mean total reward: {summary['mean_total_reward']:.3f}")
     print(
@@ -72,6 +86,12 @@ def _build_parser() -> argparse.ArgumentParser:
     start.add_argument("--control-cost-weight", type=float, default=0.05)
     start.add_argument("--checkpoint-every", type=int, default=100_000)
     start.add_argument("--evaluation-episodes", type=int, default=20)
+    start.add_argument(
+        "--target-kl",
+        type=float,
+        default=None,
+        help="Stop a PPO update early when its approximate KL grows too large.",
+    )
     start.add_argument("--hidden-size", type=int, default=DEFAULT_HIDDEN_SIZE)
     start.add_argument(
         "--message-passing-steps",
@@ -111,6 +131,8 @@ def main() -> None:
     runner = ExperimentRunner(args.experiments_dir)
 
     if args.command == "start":
+        ppo = default_ppo_config()
+        ppo["target_kl"] = args.target_kl
         config = ExperimentConfig(
             policy_type=args.policy_type,
             module_count=args.modules,
@@ -120,6 +142,7 @@ def main() -> None:
             evaluation_episodes=args.evaluation_episodes,
             graph_hidden_size=args.hidden_size,
             message_passing_steps=args.message_passing_steps,
+            ppo=ppo,
         )
         manifest = runner.start(args.name, config, args.timesteps)
         print(

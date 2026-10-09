@@ -29,6 +29,9 @@ class RandomRolloutTest(unittest.TestCase):
         self.assertLessEqual(first.mean_abs_action, 1.0)
         self.assertGreaterEqual(first.action_saturation_fraction, 0.0)
         self.assertLessEqual(first.action_saturation_fraction, 1.0)
+        self.assertGreaterEqual(first.mean_abs_lateral_velocity, 0.0)
+        self.assertGreaterEqual(first.final_heading_error_radians, 0.0)
+        self.assertLessEqual(first.final_heading_error_radians, np.pi)
 
     def test_graph_observation_wrapper_can_be_evaluated(self) -> None:
         env = GraphObservationWrapper(

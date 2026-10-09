@@ -10,7 +10,7 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.policies import BasePolicy
 
-from nervenet.evaluation import EpisodeResult, run_episode
+from nervenet.evaluation import run_episode, summarize_episode_results
 from nervenet.graphs import get_actuator_node_indices, get_message_routes
 from nervenet.policies import (
     GraphActorCriticPolicy,
@@ -75,31 +75,6 @@ def _json_scalar(value: Any) -> Any:
     return str(value)
 
 
-def _summarize_episodes(results: list[EpisodeResult]) -> dict[str, Any]:
-    return {
-        "mean_forward_distance": fmean(result.distance for result in results),
-        "mean_lateral_distance": fmean(
-            result.lateral_distance for result in results
-        ),
-        "mean_total_reward": fmean(
-            result.total_reward for result in results
-        ),
-        "mean_absolute_action": fmean(
-            result.mean_abs_action for result in results
-        ),
-        "action_saturation_fraction": fmean(
-            result.action_saturation_fraction for result in results
-        ),
-        "mean_absolute_action_change": fmean(
-            result.mean_abs_action_change for result in results
-        ),
-        "mean_actuated_joint_speed": fmean(
-            result.mean_abs_actuated_joint_velocity for result in results
-        ),
-        "unstable_episodes": sum(result.terminated for result in results),
-    }
-
-
 def evaluate_model(
     model: PPO,
     config: ExperimentConfig,
@@ -125,7 +100,7 @@ def evaluate_model(
     return {
         "episode_count": len(results),
         "seeds": [result.seed for result in results],
-        "summary": _summarize_episodes(results),
+        "summary": asdict(summarize_episode_results(results)),
         "episodes": [asdict(result) for result in results],
     }
 
@@ -209,6 +184,8 @@ class ExperimentCheckpointCallback(BaseCallback):
         print(
             "  Evaluation: "
             f"distance={summary['mean_forward_distance']:.3f} m, "
+            "absolute_lateral_distance="
+            f"{summary['mean_absolute_lateral_distance']:.3f} m, "
             f"reward={summary['mean_total_reward']:.3f}"
         )
 

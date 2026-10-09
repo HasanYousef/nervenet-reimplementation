@@ -1,8 +1,12 @@
 import argparse
+from math import degrees
 from pathlib import Path
-from statistics import fmean
 
-from nervenet.evaluation import EpisodeResult, run_episode
+from nervenet.evaluation import (
+    EpisodeResult,
+    run_episode,
+    summarize_episode_results,
+)
 from nervenet.policy_loading import default_policy_path, load_crawler_policy
 
 
@@ -10,30 +14,35 @@ def print_summary(
     name: str,
     results: list[EpisodeResult],
 ) -> None:
-    mean_distance = fmean(result.distance for result in results)
-    mean_lateral_distance = fmean(result.lateral_distance for result in results)
-    mean_reward = fmean(result.total_reward for result in results)
-    mean_abs_action = fmean(result.mean_abs_action for result in results)
-    mean_saturation = fmean(
-        result.action_saturation_fraction for result in results
-    )
-    mean_action_change = fmean(
-        result.mean_abs_action_change for result in results
-    )
-    mean_joint_velocity = fmean(
-        result.mean_abs_actuated_joint_velocity for result in results
-    )
-    unstable_episodes = sum(result.terminated for result in results)
+    summary = summarize_episode_results(results)
 
     print(name)
-    print(f"  Mean forward distance: {mean_distance:.3f} m")
-    print(f"  Mean lateral distance: {mean_lateral_distance:.3f} m")
-    print(f"  Mean total reward: {mean_reward:.3f}")
-    print(f"  Mean absolute action: {mean_abs_action:.3f}")
-    print(f"  Action saturation: {mean_saturation:.1%}")
-    print(f"  Mean absolute action change: {mean_action_change:.3f}")
-    print(f"  Mean actuated joint speed: {mean_joint_velocity:.3f} rad/s")
-    print(f"  Unstable episodes: {unstable_episodes}/{len(results)}")
+    print(f"  Mean forward distance: {summary.mean_forward_distance:.3f} m")
+    print(f"  Mean lateral distance: {summary.mean_lateral_distance:.3f} m")
+    print(
+        "  Mean absolute lateral distance: "
+        f"{summary.mean_absolute_lateral_distance:.3f} m"
+    )
+    print(
+        "  Mean absolute lateral speed: "
+        f"{summary.mean_absolute_lateral_velocity:.3f} m/s"
+    )
+    print(
+        "  Mean final heading error: "
+        f"{degrees(summary.mean_final_heading_error_radians):.1f} deg"
+    )
+    print(f"  Mean total reward: {summary.mean_total_reward:.3f}")
+    print(f"  Mean absolute action: {summary.mean_absolute_action:.3f}")
+    print(f"  Action saturation: {summary.action_saturation_fraction:.1%}")
+    print(
+        "  Mean absolute action change: "
+        f"{summary.mean_absolute_action_change:.3f}"
+    )
+    print(
+        "  Mean actuated joint speed: "
+        f"{summary.mean_actuated_joint_speed:.3f} rad/s"
+    )
+    print(f"  Unstable episodes: {summary.unstable_episodes}/{len(results)}")
 
 
 def main() -> None:

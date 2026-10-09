@@ -270,7 +270,10 @@ The deterministic episode evaluator accepts either trained-policy observation
 interface while reading displacement and joint diagnostics from the same
 underlying MuJoCo environment. Original flat, matched MLP, and graph policies
 can therefore be evaluated independently with the same episode seeds and
-metrics. Random-policy rollout remains a separate environment sanity check.
+metrics. Its direction diagnostics distinguish signed lateral displacement,
+absolute lateral displacement, lateral speed, and final heading error before a
+direction penalty is considered. Random-policy rollout remains a separate
+environment sanity check.
 
 1. Audit the remaining propagation details against the paper before spending
    more compute.

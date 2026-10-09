@@ -37,6 +37,13 @@ class ExperimentManifestTest(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 store.create(ExperimentConfig(policy_type="matched"))
 
+    def test_target_kl_must_be_positive_when_enabled(self) -> None:
+        with self.assertRaisesRegex(ValueError, "target_kl must be positive"):
+            ExperimentConfig(
+                policy_type="graph",
+                ppo={"target_kl": 0.0},
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

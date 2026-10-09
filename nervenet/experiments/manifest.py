@@ -73,6 +73,9 @@ class ExperimentConfig:
             raise ValueError("message_passing_steps must be positive")
         if self.matched_actor_hidden_size <= 0:
             raise ValueError("matched_actor_hidden_size must be positive")
+        target_kl = self.ppo.get("target_kl")
+        if target_kl is not None and target_kl <= 0:
+            raise ValueError("target_kl must be positive when provided")
 
     @classmethod
     def from_dict(cls, values: dict[str, Any]) -> "ExperimentConfig":

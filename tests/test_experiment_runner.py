@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from nervenet.experiments import ExperimentConfig, ExperimentRunner
+from nervenet.experiments.runner import create_experiment_policy
 
 
 def small_ppo_config() -> dict:
@@ -24,6 +25,19 @@ def small_ppo_config() -> dict:
 
 
 class ExperimentRunnerTest(unittest.TestCase):
+    def test_target_kl_is_applied_to_ppo(self) -> None:
+        ppo = small_ppo_config()
+        ppo["target_kl"] = 0.03
+        model = create_experiment_policy(
+            ExperimentConfig(
+                policy_type="matched",
+                module_count=1,
+                ppo=ppo,
+            )
+        )
+
+        self.assertEqual(model.target_kl, 0.03)
+
     def test_experiment_can_checkpoint_evaluate_and_continue(self) -> None:
         config = ExperimentConfig(
             policy_type="matched",
@@ -85,6 +99,10 @@ class ExperimentRunnerTest(unittest.TestCase):
         )
         self.assertIn(
             "mean_forward_distance",
+            continued["checkpoints"][-1]["evaluation"]["summary"],
+        )
+        self.assertIn(
+            "mean_absolute_lateral_distance",
             continued["checkpoints"][-1]["evaluation"]["summary"],
         )
 

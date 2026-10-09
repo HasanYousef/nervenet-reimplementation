@@ -15,7 +15,8 @@ python -m nervenet.cli.experiment start \
   --checkpoint-every 100000 \
   --evaluation-episodes 20 \
   --seed 0 \
-  --control-cost-weight 0.05
+  --control-cost-weight 0.05 \
+  --target-kl 0.03
 ```
 
 Names use lowercase letters, numbers, underscores, and hyphens. Starting
@@ -25,6 +26,12 @@ silently replaced.
 The configuration is immutable after creation. A changed morphology, seed,
 reward, architecture, or PPO configuration is a new experiment and therefore
 needs a new name.
+
+`--target-kl` enables Stable-Baselines3's PPO early-stop guard for an update
+whose approximate KL divergence grows too large. Omitting it preserves the
+unlimited-update behavior used by the earlier manual runs. Because it changes
+optimization, policies trained with and without this setting belong to
+different experiment series and should not be continued across that boundary.
 
 ## Continue
 
@@ -63,7 +70,10 @@ python -m nervenet.cli.experiment evaluate \
 ```
 
 Automatic and manual evaluations use the configured number of deterministic
-episodes and the fixed seed sequence `0..N-1`.
+episodes and the fixed seed sequence `0..N-1`. They record signed lateral
+displacement, absolute lateral displacement, mean absolute lateral speed, and
+final heading error. Measuring all four avoids mistaking left/right cancellation
+for straight locomotion.
 
 ## Files
 
