@@ -86,6 +86,7 @@ def _build_parser() -> argparse.ArgumentParser:
     start.add_argument("--control-cost-weight", type=float, default=0.05)
     start.add_argument("--checkpoint-every", type=int, default=100_000)
     start.add_argument("--evaluation-episodes", type=int, default=20)
+    start.add_argument("--evaluation-seed-start", type=int, default=0)
     start.add_argument(
         "--target-kl",
         type=float,
@@ -114,11 +115,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     evaluate.add_argument("--name", required=True)
     evaluate.add_argument("--step", type=int, default=None)
+    evaluate.add_argument("--best", action="store_true")
     _add_location_argument(evaluate)
 
     view = commands.add_parser("view", help="View an experiment checkpoint.")
     view.add_argument("--name", required=True)
     view.add_argument("--step", type=int, default=None)
+    view.add_argument("--best", action="store_true")
     view.add_argument("--seed", type=int, default=0)
     _add_location_argument(view)
 
@@ -140,6 +143,7 @@ def main() -> None:
             control_cost_weight=args.control_cost_weight,
             checkpoint_interval=args.checkpoint_every,
             evaluation_episodes=args.evaluation_episodes,
+            evaluation_seed_start=args.evaluation_seed_start,
             graph_hidden_size=args.hidden_size,
             message_passing_steps=args.message_passing_steps,
             ppo=ppo,
@@ -163,10 +167,18 @@ def main() -> None:
     config = store.config()
 
     if args.command == "evaluate":
-        _print_evaluation(runner.evaluate(args.name, args.step))
+        _print_evaluation(
+            runner.evaluate(args.name, args.step, best=args.best)
+        )
         return
 
-    checkpoint_path = store.resolve_checkpoint(args.step)
+    if args.best and args.step is not None:
+        parser.error("--best and --step cannot be used together")
+    checkpoint_path = (
+        store.resolve_best_checkpoint()
+        if args.best
+        else store.resolve_checkpoint(args.step)
+    )
     view_crawler_policy(
         model_path=checkpoint_path,
         policy_type=config.policy_type,

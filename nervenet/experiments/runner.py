@@ -78,7 +78,18 @@ def _json_scalar(value: Any) -> Any:
 def evaluate_model(
     model: PPO,
     config: ExperimentConfig,
+    episode_count: int | None = None,
+    seed_start: int | None = None,
 ) -> dict[str, Any]:
+    if episode_count is None:
+        episode_count = config.evaluation_episodes
+    if seed_start is None:
+        seed_start = config.evaluation_seed_start
+    if episode_count <= 0:
+        raise ValueError("episode_count must be positive")
+    if seed_start < 0:
+        raise ValueError("seed_start must be non-negative")
+
     env = create_policy_environment(
         config.policy_type,
         config.module_count,
@@ -93,7 +104,7 @@ def evaluate_model(
             )[0],
             seed=seed,
         )
-        for seed in range(config.evaluation_episodes)
+        for seed in range(seed_start, seed_start + episode_count)
     ]
     env.close()
 
@@ -177,6 +188,18 @@ class ExperimentCheckpointCallback(BaseCallback):
         )
         manifest["current_timesteps"] = timesteps
         manifest["latest_checkpoint"] = str(relative_path)
+        best_checkpoint = manifest.get("best_checkpoint")
+        mean_reward = evaluation["summary"]["mean_total_reward"]
+        if (
+            best_checkpoint is None
+            or mean_reward > best_checkpoint["mean_total_reward"]
+        ):
+            manifest["best_checkpoint"] = {
+                "timesteps": timesteps,
+                "path": str(relative_path),
+                "selection_metric": "mean_total_reward",
+                "mean_total_reward": mean_reward,
+            }
         self.store.write(manifest)
         self.saved_timesteps.add(timesteps)
         summary = evaluation["summary"]
@@ -253,16 +276,31 @@ class ExperimentRunner:
         self,
         name: str,
         timesteps: int | None = None,
+        *,
+        best: bool = False,
+        episode_count: int | None = None,
+        seed_start: int | None = None,
     ) -> dict[str, Any]:
         store = ExperimentStore(self.experiments_root, name)
         config = store.config()
-        checkpoint_path = store.resolve_checkpoint(timesteps)
+        if best and timesteps is not None:
+            raise ValueError("best and timesteps cannot both be selected")
+        checkpoint_path = (
+            store.resolve_best_checkpoint()
+            if best
+            else store.resolve_checkpoint(timesteps)
+        )
         model = PPO.load(checkpoint_path, device="cpu", verbose=0)
 
         if not isinstance(model.policy, _expected_policy_type(config)):
             raise ValueError("checkpoint policy type does not match experiment")
 
-        evaluation = evaluate_model(model, config)
+        evaluation = evaluate_model(
+            model,
+            config,
+            episode_count=episode_count,
+            seed_start=seed_start,
+        )
         manifest = store.load()
         checkpoint = next(
             checkpoint

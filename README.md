@@ -108,6 +108,31 @@ and per-episode evaluations, Git revisions, and dependency versions. Raw SB3
 CSV and JSON logs are also retained separately for every continuation session.
 See [docs/experiments.md](docs/experiments.md) for the lifecycle and schema.
 
+## Controlled comparisons
+
+Create one comparison containing five matched-policy runs and five graph-policy
+runs. Each run trains for one million timesteps, validates checkpoints every
+50,000 timesteps, and keeps validation seeds separate from final test seeds:
+
+```bash
+.venv/bin/python -m nervenet.cli.comparison create \
+  --name crawler-1m-v1
+
+.venv/bin/python -m nervenet.cli.comparison run \
+  --name crawler-1m-v1
+```
+
+After all runs finish, generate CSV and JSON results, two learning-curve plots,
+and a concise Markdown report:
+
+```bash
+.venv/bin/python -m nervenet.cli.comparison report \
+  --name crawler-1m-v1
+```
+
+The complete protocol and output layout are documented in
+[docs/comparisons.md](docs/comparisons.md).
+
 The lower-level commands below remain useful for short debugging runs and
 manual checkpoint management.
 

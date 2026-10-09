@@ -69,8 +69,21 @@ python -m nervenet.cli.experiment evaluate \
   --step 200704
 ```
 
+Every new experiment also records the checkpoint with the highest automatic
+evaluation reward. Select it explicitly with `--best`:
+
+```bash
+python -m nervenet.cli.experiment evaluate --name graph-v0-seed0 --best
+mjpython -m nervenet.cli.experiment view --name graph-v0-seed0 --best
+```
+
+Older experiment manifests remain compatible: when `best_checkpoint` is not
+present, the command derives it from their stored checkpoint evaluations.
+
 Automatic and manual evaluations use the configured number of deterministic
-episodes and the fixed seed sequence `0..N-1`. They record signed lateral
+episodes and a configured contiguous seed sequence. Standalone experiments
+default to `0..N-1`; controlled comparisons use separate validation and test
+seed ranges. Evaluations record signed lateral
 displacement, absolute lateral displacement, mean absolute lateral speed, and
 final heading error. Measuring all four avoids mistaking left/right cancellation
 for straight locomotion.
@@ -114,3 +127,6 @@ ignored by Git because checkpoints and run data are generated artifacts.
 If training is interrupted, completed checkpoints remain valid. The manifest
 marks the session as interrupted when Python receives the interrupt normally;
 a later `continue` resumes from the latest completed checkpoint.
+
+For repeated seeded runs, held-out evaluation, aggregate tables, and learning
+curves, use the [controlled comparison workflow](comparisons.md).

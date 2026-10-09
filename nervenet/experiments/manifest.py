@@ -51,6 +51,7 @@ class ExperimentConfig:
     control_cost_weight: float = 0.05
     checkpoint_interval: int = 100_000
     evaluation_episodes: int = 20
+    evaluation_seed_start: int = 0
     graph_hidden_size: int = DEFAULT_HIDDEN_SIZE
     message_passing_steps: int = DEFAULT_MESSAGE_PASSING_STEPS
     matched_actor_hidden_size: int = MATCHED_ACTOR_HIDDEN_SIZE
@@ -67,6 +68,8 @@ class ExperimentConfig:
             raise ValueError("checkpoint_interval must be positive")
         if self.evaluation_episodes <= 0:
             raise ValueError("evaluation_episodes must be positive")
+        if self.evaluation_seed_start < 0:
+            raise ValueError("evaluation_seed_start must be non-negative")
         if self.graph_hidden_size <= 0:
             raise ValueError("graph_hidden_size must be positive")
         if self.message_passing_steps <= 0:
@@ -150,6 +153,7 @@ class ExperimentStore:
             "software": software_metadata(),
             "current_timesteps": 0,
             "latest_checkpoint": None,
+            "best_checkpoint": None,
             "sessions": [],
             "checkpoints": [],
             "manual_evaluations": [],
@@ -202,6 +206,36 @@ class ExperimentStore:
             relative_path = matching[-1]["path"]
 
         checkpoint_path = self.directory / relative_path
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(
+                f"checkpoint file is missing: {checkpoint_path}"
+            )
+        return checkpoint_path
+
+    def best_checkpoint(self) -> dict[str, Any]:
+        manifest = self.load()
+        best = manifest.get("best_checkpoint")
+        if best is not None:
+            return next(
+                checkpoint
+                for checkpoint in manifest["checkpoints"]
+                if checkpoint["path"] == best["path"]
+            )
+
+        checkpoints = manifest["checkpoints"]
+        if not checkpoints:
+            raise ValueError("experiment has no checkpoints")
+
+        return max(
+            checkpoints,
+            key=lambda checkpoint: checkpoint["evaluation"]["summary"][
+                "mean_total_reward"
+            ],
+        )
+
+    def resolve_best_checkpoint(self) -> Path:
+        checkpoint = self.best_checkpoint()
+        checkpoint_path = self.directory / checkpoint["path"]
         if not checkpoint_path.exists():
             raise FileNotFoundError(
                 f"checkpoint file is missing: {checkpoint_path}"

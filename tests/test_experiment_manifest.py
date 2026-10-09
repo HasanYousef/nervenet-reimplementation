@@ -28,6 +28,7 @@ class ExperimentManifestTest(unittest.TestCase):
         self.assertEqual(loaded["sessions"], [])
         self.assertEqual(loaded["checkpoints"], [])
         self.assertEqual(loaded["manual_evaluations"], [])
+        self.assertIsNone(loaded["best_checkpoint"])
 
     def test_existing_experiment_cannot_be_recreated(self) -> None:
         with TemporaryDirectory() as directory:
@@ -42,6 +43,16 @@ class ExperimentManifestTest(unittest.TestCase):
             ExperimentConfig(
                 policy_type="graph",
                 ppo={"target_kl": 0.0},
+            )
+
+    def test_evaluation_seed_start_must_be_non_negative(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "evaluation_seed_start must be non-negative",
+        ):
+            ExperimentConfig(
+                policy_type="graph",
+                evaluation_seed_start=-1,
             )
 
 
