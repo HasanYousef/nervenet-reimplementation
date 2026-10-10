@@ -14,30 +14,18 @@ We built a modular crawler, trained a graph policy and a similarly sized MLP on 
 
 The crawler has three connected torso modules, six two-segment legs, 12 motorized hip/knee joints, and two passive spine hinges. The same [MuJoCo model builder](nervenet/models/crawler.py) can create other module counts. Each body becomes a graph node, and physical parent-child connections become bidirectional message routes.
 
-The graph actor reads a local observation for every body. A root node sees its height, orientation, and velocity; joint nodes see their angle and angular velocity; all nodes see external body forces. Observations are padded to 17 values per node. The three-module crawler has 15 nodes, so both policies receive the same `15 × 17` observation matrix. The MLP flattens it; the graph actor keeps the body connections.
+Each body reports a small set of numbers. The root torso reports its height, orientation, and velocity; a leg segment reports its joint angle and speed. Every body also reports forces acting on it. For this crawler, both policies receive the same 15 rows of 17 numbers.
 
-For node $v$, let $x_v$ be its observation, $h_v^{(k)}$ its hidden state after round $k$, and $N(v)$ its physical neighbors. Our graph actor computes
+The graph policy uses those numbers in four steps:
 
-$$
-\begin{aligned}
-h_v^{(0)} &= \tanh(W_{\mathrm{enc}}x_v+b_{\mathrm{enc}}), \\
-m_v^{(k)} &= \frac{1}{|N(v)|}\sum_{u\in N(v)} M(h_u^{(k)}), \\
-h_v^{(k+1)} &= \operatorname{GRU}_{\operatorname{type}(v)}\!\left(m_v^{(k)},h_v^{(k)}\right), \\
-\mu_a &= D\!\left(h_{\operatorname{owner}(a)}^{(4)}\right).
-\end{aligned}
-$$
+1. Each body turns its own numbers into a short internal summary.
+2. Connected bodies exchange summaries with their neighbors.
+3. Each body updates its summary using what it heard. The exchange and update repeat four times, so information can travel beyond immediate neighbors.
+4. The bodies with motors use their final summaries to choose motor commands.
 
-$M$ is a shared two-layer message MLP; each of the four rounds uses the same weights. Root, joint-owning, and jointless body nodes have separate GRU cells, shared within each type. $D$ is a shared action decoder; it emits one Gaussian action mean per motor. Both policies use the same flat MLP critic and PPO training code. The matched MLP actor has 63,432 active parameters versus 63,617 for the graph actor, a difference of about 0.3%. [The architecture and parameter accounting are documented here.](docs/crawler-design.md)
+The MLP receives the same numbers as one long list, without the body connections. Both policies use the same value estimator and PPO training setup. Their action networks have nearly the same number of adjustable weights (within 0.3%). [The exact architecture and parameter counts are in the technical notes.](docs/crawler-design.md)
 
-The task rewards forward speed and charges for motor commands:
-
-$$
-r_t = \frac{x_{t+1}-x_t}{\Delta t}
-      - \lambda\frac{1}{A}\sum_{a=1}^{A}u_{t,a}^{2},
-\qquad \Delta t=0.02\,\mathrm{s},\quad \lambda=0.05.
-$$
-
-Episodes last 10 simulated seconds (500 control steps). Neither policy receives a walking demonstration or a straightness reward.
+Every 0.02 seconds, the crawler earns a reward for forward speed and pays a small cost for large motor commands. An episode lasts 10 simulated seconds (500 such steps). Neither policy receives a walking demonstration or a straightness reward.
 
 ## Experiment and results
 
