@@ -259,22 +259,12 @@ from the supplied module count and control-cost weight; incompatible
 observation or action spaces are rejected during checkpoint loading. See
 `docs/experiments.md` for the managed lifecycle.
 
-## Next steps
+## Completed comparison
 
-Graph-policy training is connected to PPO and covered by short end-to-end
-optimization and experiment-continuation tests. The experiment CLI manages
-configuration, periodic checkpointing, evaluation, logs, metadata, and resume
-behavior, while the shared policy viewer reconstructs the graph-matrix
-observation environment required by the selected model.
-The deterministic episode evaluator accepts either trained-policy observation
-interface while reading displacement and joint diagnostics from the same
-underlying MuJoCo environment. Original flat, matched MLP, and graph policies
-can therefore be evaluated independently with the same episode seeds and
-metrics. Its direction diagnostics distinguish signed lateral displacement,
-absolute lateral displacement, lateral speed, and final heading error before a
-direction penalty is considered. Random-policy rollout remains a separate
-environment sanity check.
-
-1. Audit the remaining propagation details against the paper before spending
-   more compute.
-2. Compare matched MLP and graph policies across multiple training seeds.
+The graph and matched MLP policies were compared across five independent
+training seeds on the three-module crawler. The controlled 1,000,000-step
+comparison was continued to a 1,300,000-step training target with a fresh
+held-out test seed range. See the [results package](../results/crawler-1m-v1/README.md)
+for the protocol, learning curves, tables, and limitations. This is a
+fixed-morphology locomotion study; the paper's size and disability transfer
+experiments were not implemented here.

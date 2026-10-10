@@ -1,266 +1,115 @@
 # NerveNet Reimplementation
 
-An independent, from-scratch reimplementation and study of the method described in *NerveNet: Learning Structured Policy with Graph Neural Networks*.
+An independent implementation of the graph policy in [*NerveNet: Learning Structured Policy with Graph Neural Networks*](https://www.cs.toronto.edu/~tingwuwang/nervenet.html), built with MuJoCo, PyTorch, Gymnasium, and Stable-Baselines3. The authors' code was not used.
 
-The project uses modern Python and MuJoCo. It does not reuse the authors' implementation.
+We built a modular crawler, trained a graph policy and a similarly sized MLP on the same task, and evaluated both across five training seeds. With a training budget of up to 1.3 million environment steps, the graph policy traveled **24.59 ± 1.58 m** over a 10-second episode; the matched MLP traveled **16.04 ± 1.57 m**. These are descriptive results for our crawler, not a reproduction of the paper's transfer experiments.
 
-## Status
+| Matched MLP | Graph policy |
+|:---:|:---:|
+| ![Matched MLP policy moving the crawler](results/crawler-1m-v1/media/matched-seed0.gif) | ![Graph policy moving the crawler](results/crawler-1m-v1/media/graph-seed0.gif) |
 
-MuJoCo 3.14.0 has been verified on macOS. The current model is a modular crawler
-generated through MuJoCo's `MjSpec` API. It has a functional head marker,
-mirrored actuated legs, passive hinges connecting neighboring torsos, and a
-free-moving root. Its initial height is derived from the leg geometry so the
-feet begin just above the ground. A Gymnasium environment defines the action and observation
-spaces, deterministic reset, physics stepping at a 50 Hz control rate, a
-forward-velocity reward with a normalized motor-effort cost, reproducible reset
-randomization, and a configurable episode time limit.
+*Actual MuJoCo rollouts from validation-selected checkpoints. Both clips use training seed 0, held-out episode seed 30,000, and the same 10-second duration. The camera follows the crawler; the grid and distance label reveal its motion. One episode is illustrative; the numbers below aggregate 250 test episodes per policy.*
 
-The structured-policy foundation now derives a body graph from the compiled
-MuJoCo model and reads current observations for each node. The root torso
-receives its orientation and motion state, while hip, knee, and passive spine
-bodies receive their own joint angle and angular velocity. Every node also
-receives the external torque and force acting on its associated body. Graph
-nodes are classified as root, joint-owning, or jointless body nodes separately
-from whether they own an actuator.
-One shared input encoder converts every padded local observation into a
-fixed-width hidden representation without depending on the number of nodes.
-During every propagation round, a shared two-layer `tanh` MLP computes outgoing
-messages and incoming messages are averaged. Root, joint-owning, and jointless
-body nodes then use separate GRU update networks, with all nodes of the same
-type sharing parameters.
-The graph actor then uses a shared two-layer MLP to decode motor-owning node
-states into action means in MuJoCo actuator order. The same actor instance
-supports crawler morphologies with different module and actuator counts. A Gymnasium observation wrapper exposes the same
-environment state as padded per-node matrices for graph-policy training and a
-matched MLP baseline while leaving the original flat PPO baseline unchanged. A custom
-Stable-Baselines3 policy now connects the graph actor and flat critic to PPO,
-and the graph training path is covered by a short end-to-end optimization test.
+## What we built
 
-Preview the passive spine of a two-module crawler:
+The crawler has three connected torso modules, six two-segment legs, 12 motorized hip/knee joints, and two passive spine hinges. The same [MuJoCo model builder](nervenet/models/crawler.py) can create other module counts. Each body becomes a graph node, and physical parent-child connections become bidirectional message routes.
 
-```bash
-mjpython -m nervenet.cli.view_crawler --modules 2 --motion spine
-```
+The graph actor reads a local observation for every body. A root node sees its height, orientation, and velocity; joint nodes see their angle and angular velocity; all nodes see external body forces. Observations are padded to 17 values per node. The three-module crawler has 15 nodes, so both policies receive the same `15 × 17` observation matrix. The MLP flattens it; the graph actor keeps the body connections.
 
-Preview the coordinated leg motion:
+For node $v$, let $x_v$ be its observation, $h_v^{(k)}$ its hidden state after round $k$, and $N(v)$ its physical neighbors. Our graph actor computes
 
-```bash
-mjpython -m nervenet.cli.view_crawler --modules 2 --motion gait
-```
+$$
+\begin{aligned}
+h_v^{(0)} &= \tanh(W_{\mathrm{enc}}x_v+b_{\mathrm{enc}}), \\
+m_v^{(k)} &= \frac{1}{|N(v)|}\sum_{u\in N(v)} M(h_u^{(k)}), \\
+h_v^{(k+1)} &= \operatorname{GRU}_{\operatorname{type}(v)}\!\left(m_v^{(k)},h_v^{(k)}\right), \\
+\mu_a &= D\!\left(h_{\operatorname{owner}(a)}^{(4)}\right).
+\end{aligned}
+$$
 
-Run physics and optionally apply a constant command to one motor:
+$M$ is a shared two-layer message MLP; each of the four rounds uses the same weights. Root, joint-owning, and jointless body nodes have separate GRU cells, shared within each type. $D$ is a shared action decoder; it emits one Gaussian action mean per motor. Both policies use the same flat MLP critic and PPO training code. The matched MLP actor has 63,432 active parameters versus 63,617 for the graph actor, a difference of about 0.3%. [The architecture and parameter accounting are documented here.](docs/crawler-design.md)
 
-```bash
-mjpython -m nervenet.cli.view_crawler --modules 2 --motion physics \
-  --actuator module_1_left_hip_motor --control 1.0
-```
+The task rewards forward speed and charges for motor commands:
 
-Change `--modules` to construct another morphology from the same builder. The
-`spine` and `gait` motions are kinematic previews; `physics` advances MuJoCo.
+$$
+r_t = \frac{x_{t+1}-x_t}{\Delta t}
+      - \lambda\frac{1}{A}\sum_{a=1}^{A}u_{t,a}^{2},
+\qquad \Delta t=0.02\,\mathrm{s},\quad \lambda=0.05.
+$$
 
-Run the model tests:
+Episodes last 10 simulated seconds (500 control steps). Neither policy receives a walking demonstration or a straightness reward.
 
-```bash
-.venv/bin/python -m unittest discover -s tests -v
-```
+## Experiment and results
 
-## Managed experiments
+We trained five seeds per policy (`0`–`4`). Each run saved a checkpoint about every 50,000 environment steps. We chose each run's best checkpoint using ten fixed validation episodes, then evaluated it on 50 separate held-out episodes. The table shows the **1.3M-step budget**, with mean ± standard deviation across the five training seeds. Selected checkpoints can occur before 1.3M steps.
 
-Use the experiment CLI for research runs. One name owns the immutable
-configuration, checkpoints, deterministic evaluations, raw SB3 logs, training
-sessions, and software-version metadata:
+| Metric | Matched MLP | Graph policy |
+|---|---:|---:|
+| Forward distance | 16.04 ± 1.57 m | **24.59 ± 1.58 m** |
+| Episode reward | 783.15 ± 77.35 | **1213.79 ± 78.31** |
+| Absolute lateral distance | 3.09 ± 1.12 m | 1.96 ± 1.17 m |
+| Actions near saturation | 65.1% ± 6.2% | 49.4% ± 4.6% |
+| Actuated joint speed | 8.55 ± 0.62 rad/s | 8.54 ± 0.21 rad/s |
+
+![Validation forward distance over training steps, with standard deviation across seeds](results/crawler-1m-v1/reports/target_001300000/figures/distance.png)
+
+![Validation episode reward over training steps, with standard deviation across seeds](results/crawler-1m-v1/reports/target_001300000/figures/reward.png)
+
+The graph policy traveled **53.3% farther** on average in this held-out evaluation. It was also much slower to train on this machine: median recorded wall-clock time per seed was **83.3 minutes** for the graph policy and **8.6 minutes** for the MLP. Training times are machine-specific; one graph run included a long pause during system sleep, so we report medians. Shaded plot regions are standard deviations across seeds, not confidence intervals.
+
+This experiment supports a limited conclusion: graph structure helped this implementation learn locomotion on this one custom crawler and training setup. It does **not** establish that graph policies generally outperform MLPs, nor does it test the paper's main size- or disability-transfer claims. Both policies still use fast joint motion and many large motor commands, so distance alone is not a measure of a natural gait.
+
+The [full results package](results/crawler-1m-v1/README.md) contains the 1M and 1.3M reports, per-run CSV data, per-episode JSON evaluations, learning curves, and recorded training sessions. Model checkpoints and verbose logs are excluded from Git because of their size.
+
+## Run it locally
+
+The project was developed and tested with Python 3.14 and MuJoCo 3.14 on macOS. From the repository root:
 
 ```bash
-.venv/bin/python -m nervenet.cli.experiment start \
-  --name graph-v0-seed0 \
-  --policy-type graph \
-  --modules 3 \
-  --timesteps 1000000 \
-  --checkpoint-every 100000 \
-  --evaluation-episodes 20 \
-  --seed 0 \
-  --control-cost-weight 0.05 \
-  --target-kl 0.03
+python3.14 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
 ```
 
-Continue the same experiment from its latest checkpoint:
+Preview the untrained crawler and its joints:
 
 ```bash
-.venv/bin/python -m nervenet.cli.experiment continue \
-  --name graph-v0-seed0 \
-  --timesteps 500000
+mjpython -m nervenet.cli.view_crawler --modules 3 --motion gait
 ```
 
-Evaluate or view its latest checkpoint without repeating its configuration:
+On macOS, MuJoCo's interactive viewer and offscreen GIF renderer require `mjpython`. Training and evaluation use regular `python`.
+
+To reproduce the full comparison, expect substantial compute time for the graph runs:
 
 ```bash
-.venv/bin/python -m nervenet.cli.experiment evaluate \
-  --name graph-v0-seed0
-
-mjpython -m nervenet.cli.experiment view \
-  --name graph-v0-seed0
+python -m nervenet.cli.comparison create --name crawler-1m-v1
+python -m nervenet.cli.comparison run --name crawler-1m-v1
+python -m nervenet.cli.comparison report --name crawler-1m-v1
+python -m nervenet.cli.comparison extend --name crawler-1m-v1 --timesteps 300000
+python -m nervenet.cli.comparison report --name crawler-1m-v1
+python -m nervenet.cli.comparison export --name crawler-1m-v1
 ```
 
-Experiments are stored under `experiments/<name>/`. Checkpoints use their real
-completed PPO timestep, such as `step_000100352.zip`. `experiment.json` embeds
-the complete configuration, session histories, checkpoint metrics, aggregate
-and per-episode evaluations, Git revisions, and dependency versions. Raw SB3
-CSV and JSON logs are also retained separately for every continuation session.
-See [docs/experiments.md](docs/experiments.md) for the lifecycle and schema.
-
-## Controlled comparisons
-
-Create one comparison containing five matched-policy runs and five graph-policy
-runs. Each run trains for one million timesteps, validates checkpoints every
-50,000 timesteps, and keeps validation seeds separate from final test seeds:
+`run` can resume interrupted work from completed checkpoints. The extension continues the original runs to a 1.3M-step target and uses a fresh held-out test seed range. Once checkpoints exist, regenerate the clips with:
 
 ```bash
-.venv/bin/python -m nervenet.cli.comparison create \
-  --name crawler-1m-v1
-
-.venv/bin/python -m nervenet.cli.comparison run \
-  --name crawler-1m-v1
+mjpython -m nervenet.cli.render_comparison_gif --policy-type matched
+mjpython -m nervenet.cli.render_comparison_gif --policy-type graph
 ```
 
-After all runs finish, generate CSV and JSON results, two learning-curve plots,
-and a concise Markdown report:
+For one-off training, checkpoint viewing, and the experiment file layout, see [managed experiments](docs/experiments.md). The [comparison protocol](docs/comparisons.md) describes seed separation, checkpoint selection, reports, and export in detail.
 
-```bash
-.venv/bin/python -m nervenet.cli.comparison report \
-  --name crawler-1m-v1
-```
+## Repository map
 
-After inspecting that report, a deliberate budget extension can resume every
-run from its latest checkpoint while preserving the earlier report:
+| Path | Purpose |
+|---|---|
+| [`nervenet/models/`](nervenet/models/) | Modular MuJoCo crawler builder |
+| [`nervenet/envs/`](nervenet/envs/) | Gymnasium physics task and graph observation wrapper |
+| [`nervenet/graphs/`](nervenet/graphs/) | Body graph, routes, and node observations |
+| [`nervenet/policies/`](nervenet/policies/) | Graph actor, matched MLP, critic, and PPO adapters |
+| [`nervenet/comparisons/`](nervenet/comparisons/) | Multi-seed experiment orchestration and reporting |
+| [`results/crawler-1m-v1/`](results/crawler-1m-v1/) | Lightweight, versioned study results |
+| [`tests/`](tests/) | Model, environment, policy, and experiment tests |
 
-```bash
-.venv/bin/python -m nervenet.cli.comparison extend \
-  --name crawler-1m-v1 \
-  --timesteps 300000
-```
-
-The complete protocol and output layout are documented in
-[docs/comparisons.md](docs/comparisons.md).
-
-Lightweight, version-controlled outputs from completed comparisons live under
-[`results/`](results/). They include reports, figures, CSV data, and complete
-evaluation summaries without model checkpoints or training logs.
-
-The lower-level commands below remain useful for short debugging runs and
-manual checkpoint management.
-
-Run one reproducible random-policy episode as an environment sanity check:
-
-```bash
-.venv/bin/python -m nervenet.cli.rollout_random --modules 2 --seed 0
-```
-
-Train and save the three-module flat PPO baseline:
-
-```bash
-.venv/bin/python -m nervenet.cli.train_flat \
-  --modules 3 \
-  --timesteps 100000 \
-  --seed 0 \
-  --control-cost-weight 0.05
-```
-
-Train and save the three-module graph PPO policy:
-
-```bash
-.venv/bin/python -m nervenet.cli.train_graph \
-  --modules 3 \
-  --timesteps 100000 \
-  --seed 0 \
-  --control-cost-weight 0.05
-```
-
-Train the three-module matched MLP baseline. It receives the same graph
-observations as the graph policy, flattens them, and has approximately the same
-active actor parameter count while using the exact same critic and PPO output
-path:
-
-```bash
-.venv/bin/python -m nervenet.cli.train_matched \
-  --modules 3 \
-  --timesteps 100000 \
-  --seed 0 \
-  --control-cost-weight 0.05
-```
-
-Continue either policy from a checkpoint. Here `--timesteps 100000` means
-100,000 additional environment steps. A separate output is required so the
-source checkpoint remains unchanged:
-
-```bash
-.venv/bin/python -m nervenet.cli.train_graph \
-  --modules 3 \
-  --timesteps 100000 \
-  --control-cost-weight 0.05 \
-  --resume artifacts/graph_controlled_100k_seed0.zip \
-  --output artifacts/graph_controlled_200k_seed0
-
-.venv/bin/python -m nervenet.cli.train_matched \
-  --modules 3 \
-  --timesteps 100000 \
-  --control-cost-weight 0.05 \
-  --resume artifacts/matched_controlled_100k_seed0.zip \
-  --output artifacts/matched_controlled_200k_seed0
-```
-
-Stable-Baselines3 may finish the current PPO rollout, so the stored timestep
-counter can be slightly above the requested round number.
-
-Evaluate the flat policy over reproducible episode seeds:
-
-```bash
-.venv/bin/python -m nervenet.cli.evaluate_policy \
-  --policy-type flat \
-  --modules 3 \
-  --episodes 5 \
-  --control-cost-weight 0.05
-```
-
-Evaluate the graph policy with the same metrics and episode seeds:
-
-```bash
-.venv/bin/python -m nervenet.cli.evaluate_policy \
-  --policy-type graph \
-  --modules 3 \
-  --episodes 20 \
-  --control-cost-weight 0.05
-```
-
-Evaluate the matched MLP policy independently:
-
-```bash
-.venv/bin/python -m nervenet.cli.evaluate_policy \
-  --policy-type matched \
-  --modules 3 \
-  --episodes 20 \
-  --control-cost-weight 0.05
-```
-
-The evaluation command supports `--policy-type flat`, `--policy-type matched`,
-and `--policy-type graph`. It reports forward and lateral displacement, motor-command
-magnitude and saturation, command changes, and actuated joint speed so reward
-exploitation is visible rather than hidden behind a single return value. The
-lateral diagnostics include signed and absolute displacement, absolute lateral
-speed, and final heading error; signed drift alone can hide left/right failures
-that cancel across episodes.
-Use the same `--control-cost-weight` for training and evaluation when reporting
-returns from an experiment.
-
-Play the trained flat policy in the passive MuJoCo viewer:
-
-```bash
-mjpython -m nervenet.cli.view_policy --modules 3 --policy-type flat
-```
-
-Play the trained graph policy with the same viewer:
-
-```bash
-mjpython -m nervenet.cli.view_policy --modules 3 --policy-type graph
-```
-
-The same viewer accepts `--policy-type matched` for the matched MLP baseline.
+The original [NerveNet paper and project page](https://www.cs.toronto.edu/~tingwuwang/nervenet.html) are the scientific reference. This repository is an independent learning project with a distinct robot and evaluation protocol.

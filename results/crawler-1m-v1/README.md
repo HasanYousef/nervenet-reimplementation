@@ -42,3 +42,12 @@ Each `reports/target_*` directory contains the Markdown report, aggregate and pe
 `training_sessions.csv` contains the compact timing, timestep, interruption, and Git provenance record for every training session.
 
 The cumulative validation curves use the same fixed validation episodes throughout training and are the best source for judging learning progress across budgets.
+
+The two GIFs in `media/` are offscreen MuJoCo renders of the validation-selected
+seed-0 checkpoints from the 1,300,000-step report. Both use held-out episode
+seed 30,000, deterministic actions, a 10-second simulation, and the same camera
+and lighting. The recording extends the visible grid beyond the model's normal
+edge; this changes no physics or reported measurement. They illustrate one
+episode each; the tables above summarize 50 test episodes for each of five
+training seeds. Regenerating the GIFs requires
+the corresponding local checkpoints in the ignored `experiments/` directory.

@@ -133,3 +133,21 @@ It deliberately excludes model weights and verbose training logs.
 The shaded regions in the learning curves show one standard deviation across
 training seeds. They describe variation between runs; they are not confidence
 intervals or formal significance tests.
+
+## Render representative policy clips
+
+With local checkpoints present, render the validation-selected checkpoints
+from the 1,300,000-step report:
+
+```bash
+mjpython -m nervenet.cli.render_comparison_gif --policy-type matched
+mjpython -m nervenet.cli.render_comparison_gif --policy-type graph
+```
+
+The renderer reads `results/<name>/reports/<target>/results.csv` to find the
+selected checkpoint and `summary.json` for the environment configuration and
+held-out episode seed. By default it saves two small GIFs under
+`results/<name>/media/`. Both clips are deterministic rollouts with a tracking
+camera and forward-distance overlay. They are documentation examples, not the
+source of the reported multi-episode statistics. On macOS, use `mjpython` for
+MuJoCo's offscreen OpenGL context.
