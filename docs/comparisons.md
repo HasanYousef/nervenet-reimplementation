@@ -115,6 +115,21 @@ report, while `reports/target_*/` keeps immutable budget-specific snapshots.
 the full budget history. The original comparison configuration is retained as
 the initial protocol rather than silently rewritten.
 
+## Export lightweight public results
+
+Reports are stored inside the ignored `experiments/` directory alongside large
+checkpoints and logs. Export only the small, useful research artifacts into a
+version-controlled package with:
+
+```bash
+python -m nervenet.cli.comparison export --name crawler-1m-v1
+```
+
+The default destination is `results/<name>/`. It contains every archived
+budget report, CSV dataset, complete JSON evaluation, figure, comparison
+manifest, compact per-session timing/provenance CSV, and a generated overview.
+It deliberately excludes model weights and verbose training logs.
+
 The shaded regions in the learning curves show one standard deviation across
 training seeds. They describe variation between runs; they are not confidence
 intervals or formal significance tests.

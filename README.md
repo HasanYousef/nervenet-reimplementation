@@ -142,6 +142,10 @@ run from its latest checkpoint while preserving the earlier report:
 The complete protocol and output layout are documented in
 [docs/comparisons.md](docs/comparisons.md).
 
+Lightweight, version-controlled outputs from completed comparisons live under
+[`results/`](results/). They include reports, figures, CSV data, and complete
+evaluation summaries without model checkpoints or training logs.
+
 The lower-level commands below remain useful for short debugging runs and
 manual checkpoint management.
 

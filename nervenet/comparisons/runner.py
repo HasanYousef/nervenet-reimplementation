@@ -17,6 +17,7 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from stable_baselines3 import PPO
 
+from nervenet.comparisons.exporter import export_comparison_results
 from nervenet.comparisons.manifest import ComparisonConfig, ComparisonStore
 from nervenet.experiments import ExperimentConfig, ExperimentRunner, ExperimentStore
 from nervenet.experiments.manifest import software_metadata, utc_now
@@ -278,6 +279,17 @@ class ComparisonRunner:
         }
         store.write(manifest)
         return report_path
+
+    def export_results(
+        self,
+        name: str,
+        output_root: Path = Path("results"),
+    ) -> Path:
+        return export_comparison_results(
+            self.comparisons_root,
+            name,
+            output_root,
+        )
 
     def _all_runs_complete(
         self,

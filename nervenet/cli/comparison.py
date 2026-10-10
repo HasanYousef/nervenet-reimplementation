@@ -46,6 +46,11 @@ def _build_parser() -> argparse.ArgumentParser:
     report = commands.add_parser("report")
     report.add_argument("--name", required=True)
     _add_location_argument(report)
+
+    export = commands.add_parser("export")
+    export.add_argument("--name", required=True)
+    export.add_argument("--output-dir", type=Path, default=Path("results"))
+    _add_location_argument(export)
     return parser
 
 
@@ -84,6 +89,11 @@ def main() -> None:
                 f"{row['status']:12} {row['timesteps']:,} / "
                 f"{row['target_timesteps']:,} steps"
             )
+        return
+
+    if args.command == "export":
+        output_path = runner.export_results(args.name, args.output_dir)
+        print(f"Exported results: {output_path}")
         return
 
     report_path = runner.report(args.name)

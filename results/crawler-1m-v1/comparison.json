@@ -1,0 +1,75 @@
+{
+  "budget_history": [
+    {
+      "additional_timesteps": 300000,
+      "created_at": "2026-10-10T08:02:03.140460+00:00",
+      "previous_target_timesteps": 1000000,
+      "reason": "post-report training extension",
+      "target_timesteps": 1300000,
+      "test_seed_start": 30000
+    }
+  ],
+  "config": {
+    "checkpoint_interval": 50000,
+    "control_cost_weight": 0.05,
+    "graph_hidden_size": 64,
+    "matched_actor_hidden_size": 151,
+    "message_passing_steps": 4,
+    "module_count": 3,
+    "policy_types": [
+      "matched",
+      "graph"
+    ],
+    "ppo": {
+      "batch_size": 64,
+      "clip_range": 0.2,
+      "ent_coef": 0.0,
+      "gae_lambda": 0.95,
+      "gamma": 0.99,
+      "learning_rate": 0.0003,
+      "max_grad_norm": 0.5,
+      "n_epochs": 10,
+      "n_steps": 2048,
+      "normalize_advantage": true,
+      "target_kl": null,
+      "vf_coef": 0.5
+    },
+    "test_episode_count": 50,
+    "test_seed_start": 20000,
+    "total_timesteps": 1000000,
+    "training_seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "validation_episode_count": 10,
+    "validation_seed_start": 10000
+  },
+  "created_at": "2026-10-09T12:08:13.114759+00:00",
+  "current_target_timesteps": 1300000,
+  "current_test_seed_start": 30000,
+  "latest_report": {
+    "archive_path": "reports/target_001300000",
+    "generated_at": "2026-10-10T10:25:13.995152+00:00",
+    "path": "report.md",
+    "results_path": "results.csv",
+    "summary_path": "summary.json",
+    "target_timesteps": 1300000,
+    "test_seed_start": 30000
+  },
+  "name": "crawler-1m-v1",
+  "schema_version": 1,
+  "software": {
+    "git_commit": "467e0b1e6a314855362da51cdb9b148a6bbf025f",
+    "git_dirty": false,
+    "gymnasium": "1.3.0",
+    "mujoco": "3.14.0",
+    "python": "3.14.6",
+    "stable_baselines3": "2.9.0",
+    "torch": "2.14.0"
+  },
+  "status": "completed",
+  "updated_at": "2026-10-10T10:25:14.035491+00:00"
+}

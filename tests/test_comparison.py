@@ -88,6 +88,35 @@ class ComparisonTest(unittest.TestCase):
             extended_archive_exists = (
                 store.report_archive_directory(16) / "summary.json"
             ).exists()
+            export_path = runner.export_results(
+                "small-comparison",
+                root / "published-results",
+            )
+            export_readme = (export_path / "README.md").read_text()
+            export_manifest_exists = (
+                export_path / "comparison.json"
+            ).exists()
+            training_sessions_exists = (
+                export_path / "training_sessions.csv"
+            ).exists()
+            first_export_exists = (
+                export_path
+                / "reports"
+                / "target_000000008"
+                / "summary.json"
+            ).exists()
+            extended_export_exists = (
+                export_path
+                / "reports"
+                / "target_000000016"
+                / "figures"
+                / "distance.png"
+            ).exists()
+            export_contains_model = any(
+                path.suffix == ".zip"
+                for path in export_path.rglob("*")
+                if path.is_file()
+            )
 
         self.assertEqual(len(status), 2)
         self.assertTrue(all(row["timesteps"] == 8 for row in status))
@@ -108,6 +137,15 @@ class ComparisonTest(unittest.TestCase):
         self.assertEqual(extended_summary["target_timesteps"], 16)
         self.assertEqual(extended_summary["test_seed_start"], 10_200)
         self.assertTrue(extended_archive_exists)
+        self.assertTrue(export_manifest_exists)
+        self.assertTrue(training_sessions_exists)
+        self.assertTrue(first_export_exists)
+        self.assertTrue(extended_export_exists)
+        self.assertFalse(export_contains_model)
+        self.assertIn("8 | 200–200 | Matched", export_readme)
+        self.assertIn("16 | 10,200–10,200 | Matched", export_readme)
+        self.assertIn("Model checkpoints", export_readme)
+        self.assertIn("Recorded training time", export_readme)
 
     def test_extension_requires_completed_report(self) -> None:
         config = ComparisonConfig(
