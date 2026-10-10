@@ -74,11 +74,84 @@ class ComparisonTest(unittest.TestCase):
             self.assertTrue(
                 (store.figures_directory / "distance.png").exists()
             )
+            first_archive = store.report_archive_directory(8)
+            self.assertTrue((first_archive / "report.md").exists())
+            self.assertTrue((first_archive / "figures" / "reward.png").exists())
+
+            runner.extend("small-comparison", 8)
+            extended_status = runner.status("small-comparison")
+            extended_manifest = store.load()
+            runner.report("small-comparison")
+            extended_summary = json.loads(
+                (store.directory / "summary.json").read_text()
+            )
+            extended_archive_exists = (
+                store.report_archive_directory(16) / "summary.json"
+            ).exists()
 
         self.assertEqual(len(status), 2)
         self.assertTrue(all(row["timesteps"] == 8 for row in status))
+        self.assertTrue(all(row["target_timesteps"] == 8 for row in status))
         self.assertEqual(len(summary["runs"]), 2)
         self.assertEqual(summary["config"]["test_seed_start"], 200)
+        self.assertEqual(summary["target_timesteps"], 8)
+        self.assertEqual(summary["test_seed_start"], 200)
+        self.assertTrue(
+            all(row["timesteps"] >= 16 for row in extended_status)
+        )
+        self.assertTrue(
+            all(row["target_timesteps"] == 16 for row in extended_status)
+        )
+        self.assertEqual(extended_manifest["current_target_timesteps"], 16)
+        self.assertEqual(extended_manifest["current_test_seed_start"], 10_200)
+        self.assertEqual(len(extended_manifest["budget_history"]), 2)
+        self.assertEqual(extended_summary["target_timesteps"], 16)
+        self.assertEqual(extended_summary["test_seed_start"], 10_200)
+        self.assertTrue(extended_archive_exists)
+
+    def test_extension_requires_completed_report(self) -> None:
+        config = ComparisonConfig(
+            policy_types=("matched",),
+            training_seeds=(0,),
+            total_timesteps=8,
+            module_count=1,
+            checkpoint_interval=8,
+            validation_episode_count=1,
+            validation_seed_start=100,
+            test_episode_count=1,
+            test_seed_start=200,
+            ppo=small_ppo_config(),
+        )
+
+        with TemporaryDirectory() as directory:
+            runner = ComparisonRunner(Path(directory))
+            runner.create("unfinished-comparison", config)
+            with self.assertRaisesRegex(ValueError, "must be completed"):
+                runner.extend("unfinished-comparison", 8)
+
+            runner.run("unfinished-comparison")
+            with self.assertRaisesRegex(ValueError, "generate.*report"):
+                runner.extend("unfinished-comparison", 8)
+
+    def test_extension_budget_must_be_positive(self) -> None:
+        config = ComparisonConfig(
+            policy_types=("matched",),
+            training_seeds=(0,),
+            total_timesteps=8,
+            module_count=1,
+            checkpoint_interval=8,
+            validation_episode_count=1,
+            validation_seed_start=100,
+            test_episode_count=1,
+            test_seed_start=200,
+            ppo=small_ppo_config(),
+        )
+
+        with TemporaryDirectory() as directory:
+            runner = ComparisonRunner(Path(directory))
+            runner.create("invalid-extension", config)
+            with self.assertRaisesRegex(ValueError, "must be positive"):
+                runner.extend("invalid-extension", 0)
 
 
 if __name__ == "__main__":

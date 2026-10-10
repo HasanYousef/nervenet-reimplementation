@@ -51,6 +51,28 @@ Inspect progress without starting training:
 python -m nervenet.cli.comparison status --name crawler-1m-v1
 ```
 
+## Extend a completed comparison
+
+Only extend a comparison after generating its report. For example, to continue
+every 1,000,000-timestep run for another 300,000 timesteps:
+
+```bash
+python -m nervenet.cli.comparison extend \
+  --name crawler-1m-v1 \
+  --timesteps 300000
+```
+
+The extension is recorded before training begins, so the command is safe to
+interrupt. Resume it with the normal `run` command. Each run continues from its
+latest checkpoint; it does not restart and it does not continue from the
+validation-selected checkpoint.
+
+Extending preserves the previous report in a target-specific directory,
+advances the requested training target, and assigns a fresh held-out test seed
+range. This prevents the already-inspected 1,000,000-timestep test episodes
+from being reused as unseen evidence for the extended policies. Generate a new
+report after all extended runs finish.
+
 ## Generate the report
 
 After all ten runs finish:
@@ -70,6 +92,9 @@ experiments/crawler-1m-v1/
 │   ├── matched-seed0/
 │   ├── graph-seed0/
 │   └── ...
+├── reports/
+│   ├── target_001000000/
+│   └── target_001300000/
 ├── results.csv
 ├── learning_curves.csv
 ├── summary.json
@@ -83,7 +108,12 @@ experiments/crawler-1m-v1/
 selected checkpoints, and a deliberately limited interpretation. `results.csv`
 has one row per training run. `summary.json` preserves the complete comparison
 configuration, aggregate statistics, validation evaluations, and every
-held-out episode result.
+held-out episode result. The files at the comparison root are always the latest
+report, while `reports/target_*/` keeps immutable budget-specific snapshots.
+
+`comparison.json` records the current target, current held-out seed range, and
+the full budget history. The original comparison configuration is retained as
+the initial protocol rather than silently rewritten.
 
 The shaded regions in the learning curves show one standard deviation across
 training seeds. They describe variation between runs; they are not confidence

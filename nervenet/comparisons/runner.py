@@ -79,6 +79,7 @@ class ComparisonRunner:
     ) -> dict[str, Any]:
         store = ComparisonStore(self.comparisons_root, name)
         config = store.config()
+        target_timesteps = store.target_timesteps()
         policy_types = (
             (policy_type,) if policy_type is not None else config.policy_types
         )
@@ -117,7 +118,7 @@ class ComparisonRunner:
                             f"run configuration does not match: {run_name}"
                         )
                     remaining = (
-                        config.total_timesteps
+                        target_timesteps
                         - run_manifest["current_timesteps"]
                     )
                     if remaining > 0:
@@ -133,14 +134,22 @@ class ComparisonRunner:
 
         manifest = store.load()
         manifest["status"] = (
-            "completed" if self._all_runs_complete(store, config) else "partial"
+            "completed"
+            if self._all_runs_complete(store, config, target_timesteps)
+            else "partial"
         )
         store.write(manifest)
         return manifest
 
+    def extend(self, name: str, additional_timesteps: int) -> dict[str, Any]:
+        store = ComparisonStore(self.comparisons_root, name)
+        store.extend_budget(additional_timesteps)
+        return self.run(name)
+
     def status(self, name: str) -> list[dict[str, Any]]:
         store = ComparisonStore(self.comparisons_root, name)
         config = store.config()
+        target_timesteps = store.target_timesteps()
         rows = []
         for policy_type in config.policy_types:
             for seed in config.training_seeds:
@@ -153,6 +162,7 @@ class ComparisonRunner:
                             "seed": seed,
                             "status": "not started",
                             "timesteps": 0,
+                            "target_timesteps": target_timesteps,
                         }
                     )
                     continue
@@ -163,6 +173,7 @@ class ComparisonRunner:
                         "seed": seed,
                         "status": manifest["status"],
                         "timesteps": manifest["current_timesteps"],
+                        "target_timesteps": target_timesteps,
                     }
                 )
         return rows
@@ -170,7 +181,9 @@ class ComparisonRunner:
     def report(self, name: str) -> Path:
         store = ComparisonStore(self.comparisons_root, name)
         config = store.config()
-        if not self._all_runs_complete(store, config):
+        target_timesteps = store.target_timesteps()
+        test_seed_start = store.test_seed_start()
+        if not self._all_runs_complete(store, config, target_timesteps):
             raise ValueError("all comparison runs must finish before reporting")
 
         run_results = []
@@ -195,7 +208,7 @@ class ComparisonRunner:
                     model,
                     run_store.config(),
                     episode_count=config.test_episode_count,
-                    seed_start=config.test_seed_start,
+                    seed_start=test_seed_start,
                 )
                 run_results.append(
                     {
@@ -231,6 +244,8 @@ class ComparisonRunner:
             "generated_at": utc_now(),
             "software": software_metadata(),
             "config": config.to_dict(),
+            "target_timesteps": target_timesteps,
+            "test_seed_start": test_seed_start,
             "aggregate": aggregate,
             "runs": detailed_results,
         }
@@ -239,8 +254,17 @@ class ComparisonRunner:
         )
         report_path = store.directory / "report.md"
         report_path.write_text(
-            self._render_report(name, config, aggregate, run_results)
+            self._render_report(
+                name,
+                config,
+                target_timesteps,
+                test_seed_start,
+                aggregate,
+                run_results,
+            )
         )
+
+        archive = store.archive_current_report(target_timesteps)
 
         manifest = store.load()
         manifest["latest_report"] = {
@@ -248,6 +272,9 @@ class ComparisonRunner:
             "path": "report.md",
             "summary_path": "summary.json",
             "results_path": "results.csv",
+            "target_timesteps": target_timesteps,
+            "test_seed_start": test_seed_start,
+            "archive_path": str(archive.relative_to(store.directory)),
         }
         store.write(manifest)
         return report_path
@@ -256,6 +283,7 @@ class ComparisonRunner:
         self,
         store: ComparisonStore,
         config: ComparisonConfig,
+        target_timesteps: int,
     ) -> bool:
         for policy_type in config.policy_types:
             for seed in config.training_seeds:
@@ -265,7 +293,7 @@ class ComparisonRunner:
                 )
                 if not run_store.exists():
                     return False
-                if run_store.load()["current_timesteps"] < config.total_timesteps:
+                if run_store.load()["current_timesteps"] < target_timesteps:
                     return False
         return True
 
@@ -398,6 +426,8 @@ class ComparisonRunner:
         self,
         name: str,
         config: ComparisonConfig,
+        target_timesteps: int,
+        test_seed_start: int,
         aggregate: dict[str, Any],
         run_results: list[dict[str, Any]],
     ) -> str:
@@ -415,7 +445,7 @@ class ComparisonRunner:
             "",
             (
                 f"Matched MLP and graph PPO policies were trained for "
-                f"{config.total_timesteps:,} timesteps on a "
+                f"{target_timesteps:,} timesteps on a "
                 f"{config.module_count}-module crawler. Results use "
                 f"{len(config.training_seeds)} independent training seeds."
             ),
@@ -425,7 +455,8 @@ class ComparisonRunner:
                 f"{config.checkpoint_interval:,} timesteps on "
                 f"{config.validation_episode_count} fixed episodes. The best "
                 f"checkpoint per run was selected by validation reward, then "
-                f"evaluated on {config.test_episode_count} held-out episodes."
+                f"evaluated on {config.test_episode_count} held-out episodes "
+                f"starting at seed {test_seed_start:,}."
             ),
             "",
             "## Learning curves",

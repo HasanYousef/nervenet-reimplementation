@@ -130,6 +130,15 @@ and a concise Markdown report:
   --name crawler-1m-v1
 ```
 
+After inspecting that report, a deliberate budget extension can resume every
+run from its latest checkpoint while preserving the earlier report:
+
+```bash
+.venv/bin/python -m nervenet.cli.comparison extend \
+  --name crawler-1m-v1 \
+  --timesteps 300000
+```
+
 The complete protocol and output layout are documented in
 [docs/comparisons.md](docs/comparisons.md).
 

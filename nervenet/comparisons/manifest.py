@@ -1,6 +1,7 @@
 from dataclasses import asdict, dataclass, field
 import json
 from pathlib import Path
+import shutil
 from typing import Any
 
 from nervenet.experiments.manifest import (
@@ -98,6 +99,7 @@ class ComparisonStore:
         self.directory = root / name
         self.runs_directory = self.directory / "runs"
         self.figures_directory = self.directory / "figures"
+        self.reports_directory = self.directory / "reports"
         self.manifest_path = self.directory / "comparison.json"
 
     def exists(self) -> bool:
@@ -110,6 +112,7 @@ class ComparisonStore:
             )
         self.runs_directory.mkdir(parents=True)
         self.figures_directory.mkdir()
+        self.reports_directory.mkdir()
         now = utc_now()
         manifest = {
             "schema_version": COMPARISON_SCHEMA_VERSION,
@@ -118,6 +121,16 @@ class ComparisonStore:
             "created_at": now,
             "updated_at": now,
             "config": config.to_dict(),
+            "current_target_timesteps": config.total_timesteps,
+            "current_test_seed_start": config.test_seed_start,
+            "budget_history": [
+                {
+                    "created_at": now,
+                    "target_timesteps": config.total_timesteps,
+                    "test_seed_start": config.test_seed_start,
+                    "reason": "initial comparison",
+                }
+            ],
             "software": software_metadata(),
             "latest_report": None,
         }
@@ -142,6 +155,87 @@ class ComparisonStore:
 
     def config(self) -> ComparisonConfig:
         return ComparisonConfig.from_dict(self.load()["config"])
+
+    def target_timesteps(self) -> int:
+        manifest = self.load()
+        return manifest.get(
+            "current_target_timesteps",
+            self.config().total_timesteps,
+        )
+
+    def test_seed_start(self) -> int:
+        manifest = self.load()
+        return manifest.get(
+            "current_test_seed_start",
+            self.config().test_seed_start,
+        )
+
+    def extend_budget(self, additional_timesteps: int) -> dict[str, Any]:
+        if additional_timesteps <= 0:
+            raise ValueError("additional_timesteps must be positive")
+
+        manifest = self.load()
+        config = ComparisonConfig.from_dict(manifest["config"])
+        previous_target = manifest.get(
+            "current_target_timesteps",
+            config.total_timesteps,
+        )
+        if manifest.get("status") != "completed":
+            raise ValueError(
+                "comparison must be completed before extending its budget"
+            )
+        if manifest.get("latest_report") is None:
+            raise ValueError(
+                "generate the current comparison report before extending"
+            )
+
+        self.archive_current_report(previous_target)
+        previous_test_seed_start = manifest.get(
+            "current_test_seed_start",
+            config.test_seed_start,
+        )
+        new_test_seed_start = previous_test_seed_start + 10_000
+        new_target = previous_target + additional_timesteps
+        now = utc_now()
+        manifest["current_target_timesteps"] = new_target
+        manifest["current_test_seed_start"] = new_test_seed_start
+        manifest.setdefault("budget_history", []).append(
+            {
+                "created_at": now,
+                "previous_target_timesteps": previous_target,
+                "additional_timesteps": additional_timesteps,
+                "target_timesteps": new_target,
+                "test_seed_start": new_test_seed_start,
+                "reason": "post-report training extension",
+            }
+        )
+        manifest["status"] = "extended"
+        manifest["latest_report"] = None
+        self.write(manifest)
+        return manifest
+
+    def report_archive_directory(self, target_timesteps: int) -> Path:
+        return self.reports_directory / f"target_{target_timesteps:09d}"
+
+    def archive_current_report(self, target_timesteps: int) -> Path:
+        archive = self.report_archive_directory(target_timesteps)
+        if archive.exists():
+            return archive
+        archive.mkdir(parents=True)
+        for filename in (
+            "report.md",
+            "results.csv",
+            "learning_curves.csv",
+            "summary.json",
+        ):
+            source = self.directory / filename
+            if not source.exists():
+                raise FileNotFoundError(
+                    f"comparison report file is missing: {source}"
+                )
+            shutil.copy2(source, archive / filename)
+        shutil.copytree(self.figures_directory, archive / "figures")
+        return archive
 
     def run_name(self, policy_type: str, seed: int) -> str:
         return f"{policy_type}-seed{seed}"
